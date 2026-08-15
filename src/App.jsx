@@ -9,6 +9,7 @@ import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
 import StoveShop from './components/StoveShop'
+import MittShop from './components/MittShop'
 import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
 import './App.css'
@@ -65,6 +66,8 @@ function App() {
   const [selectedStoveId, setSelectedStoveId] = useState(null)
   const [saveLoaded, setSaveLoaded] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const [mittShopOpen, setMittShopOpen] = useState(false)
+  const [equippedMittTier, setEquippedMittTier] = useState(null)
   const [dexOpen, setDexOpen] = useState(false)
   // Lifetime dex only, for now - "Current" only makes sense once rebirth (which
   // resets it) exists, so building that half now would be building against
@@ -84,6 +87,8 @@ function App() {
           setMechanismSlots(saved.mechanismSlots ?? INITIAL_MECHANISM_SLOTS)
           // Pre-dex saves won't have this field either - default to nothing discovered yet.
           setDex(saved.dex ?? {})
+          // Pre-mitt saves won't have this field either - default to no mitt equipped.
+          setEquippedMittTier(saved.equippedMittTier ?? null)
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -93,8 +98,8 @@ function App() {
   // (guards against saving the default state over a real save on first render).
   useEffect(() => {
     if (!saveLoaded) return
-    saveState({ cash, inventory, gridSlots, mechanismSlots, dex })
-  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots, dex])
+    saveState({ cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier })
+  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -120,6 +125,12 @@ function App() {
     setCash((c) => c - item.price)
     setInventory((inv) => [...inv, item])
     setPulledResults((prev) => prev.map((r, i) => (i === index ? null : r)))
+  }
+
+  function buyMitt(mitt) {
+    if (cash < mitt.price || mitt.tier === equippedMittTier) return
+    setCash((c) => c - mitt.price)
+    setEquippedMittTier(mitt.tier)
   }
 
   function unlockMechanism(index) {
@@ -246,6 +257,7 @@ function App() {
   }
 
   const hasEmptyUnlockedSlot = gridSlots.some((s) => s.unlocked && !s.stove)
+  const redBonus = equippedMittTier ? data.luck.mittRedBonus[equippedMittTier] : 0
 
   return (
     <div className="game">
@@ -256,6 +268,7 @@ function App() {
         ingredientsData={data.ingredients}
         leverData={data.lever}
         mechanismCount={mechanismSlots.filter(Boolean).length}
+        redBonus={redBonus}
         onResult={handlePullResult}
       />
 
@@ -285,6 +298,9 @@ function App() {
         <button className="shop-toggle" onClick={() => setShopOpen((o) => !o)}>
           {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
         </button>
+        <button onClick={() => setMittShopOpen((o) => !o)}>
+          {mittShopOpen ? 'Close Mitt Shop' : 'Open Mitt Shop'}
+        </button>
         <button onClick={() => setDexOpen(true)}>Dex ({Object.keys(dex).length})</button>
       </div>
 
@@ -301,6 +317,17 @@ function App() {
           cash={cash}
           hasEmptyUnlockedSlot={hasEmptyUnlockedSlot}
           onBuy={buyStove}
+        />
+      )}
+
+      {mittShopOpen && (
+        <MittShop
+          mittsData={data.mitts}
+          shopData={data.stoveShop}
+          luckData={data.luck}
+          cash={cash}
+          equippedMittTier={equippedMittTier}
+          onEquip={buyMitt}
         />
       )}
 

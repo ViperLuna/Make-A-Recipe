@@ -13,12 +13,12 @@ const TIER_COLORS = {
 // One independent spinner. All boxes share the same trigger and duration (so
 // they start and finish together), but each rolls its own real result and its
 // own filler frames - genuinely independent outcomes, not copies of each other.
-function SpinnerBox({ ingredientsData, leverData, trigger, onResult }) {
+function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, onResult }) {
   const [display, setDisplay] = useState(null)
 
   useEffect(() => {
     if (trigger === 0) return
-    const realResult = pullIngredient(ingredientsData, leverData.basePullChance)
+    const realResult = pullIngredient(ingredientsData, leverData.basePullChance, redBonus)
     const { startMs, endMs } = leverData.spinAnimation.flickerIntervalRange
     const totalMs = leverData.spinAnimation.baseDurationSeconds * 1000
     const startTime = performance.now()
@@ -35,7 +35,7 @@ function SpinnerBox({ ingredientsData, leverData, trigger, onResult }) {
       }
       const progress = elapsed / totalMs
       const interval = startMs + (endMs - startMs) * progress
-      setDisplay(pullIngredient(ingredientsData, leverData.basePullChance))
+      setDisplay(pullIngredient(ingredientsData, leverData.basePullChance, redBonus))
       timeoutId = setTimeout(tick, interval)
     }
     tick()
@@ -52,7 +52,7 @@ function SpinnerBox({ ingredientsData, leverData, trigger, onResult }) {
   )
 }
 
-export default function Lever({ ingredientsData, leverData, mechanismCount, onResult }) {
+export default function Lever({ ingredientsData, leverData, mechanismCount, redBonus = 0, onResult }) {
   const [trigger, setTrigger] = useState(0)
   const [spinning, setSpinning] = useState(false)
 
@@ -84,6 +84,7 @@ export default function Lever({ ingredientsData, leverData, mechanismCount, onRe
             key={i}
             ingredientsData={ingredientsData}
             leverData={leverData}
+            redBonus={redBonus}
             trigger={trigger}
             onResult={(result) => onResult(i, result)}
           />
