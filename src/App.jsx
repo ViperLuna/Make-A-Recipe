@@ -1,121 +1,72 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useGameData } from './game/useGameData'
+import Lever from './components/Lever'
+import Stove from './components/Stove'
 import './App.css'
 
+const STARTING_CASH = 25
+
 function App() {
-  const [count, setCount] = useState(0)
+  const { data, error } = useGameData()
+  const [cash, setCash] = useState(STARTING_CASH)
+  const [pulled, setPulled] = useState(null)
+  const [inventory, setInventory] = useState([])
+  const [cooking, setCooking] = useState(null)
+
+  if (error) return <p>Failed to load game data: {error.message}</p>
+  if (!data) return <p>Loading...</p>
+
+  function buyPulled() {
+    if (!pulled || cash < pulled.price) return
+    setCash((c) => c - pulled.price)
+    setInventory((inv) => [...inv, pulled])
+    setPulled(null)
+  }
+
+  function cookFromInventory(index) {
+    if (cooking) return
+    const item = inventory[index]
+    setInventory((inv) => inv.filter((_, i) => i !== index))
+    setCooking(item)
+  }
+
+  function serve(value) {
+    setCash((c) => c + value)
+    setCooking(null)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="game">
+      <h1>Make A Recipe</h1>
+      <p className="cash">${cash.toFixed(2)}</p>
 
-      <div className="ticks"></div>
+      <Lever ingredientsData={data.ingredients} leverData={data.lever} onResult={setPulled} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {pulled && (
+        <div className="pulled-actions">
+          <button onClick={buyPulled} disabled={cash < pulled.price}>
+            Buy for ${pulled.price}
+          </button>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <Stove ingredient={cooking} onServe={serve} />
+
+      <div className="inventory">
+        <h3>Inventory</h3>
+        {inventory.length === 0 && <p>Nothing yet - pull the lever and buy something.</p>}
+        <ul>
+          {inventory.map((item, i) => (
+            <li key={i}>
+              {item.name} (${item.price})
+              <button onClick={() => cookFromInventory(i)} disabled={!!cooking}>
+                Cook
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   )
 }
 
