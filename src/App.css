@@ -78,6 +78,18 @@
   font-size: 0.9rem;
 }
 
+.stove-contents li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remove-btn {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+}
+
 .stove-contents .empty-slot {
   color: #666;
   font-style: italic;
