@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useGameData } from './game/useGameData'
 import { totalCookSeconds } from './game/economy'
 import { buildIngredientWordMap } from './game/naming'
+import { rollMutation } from './game/mutations'
+import { loadState, saveState } from './game/save'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import './App.css'
@@ -16,6 +18,7 @@ const INITIAL_STOVES = [
     maxSlots: 1,
     contents: [],
     cookCompleteAt: null,
+    mutation: null,
   },
 ]
 
@@ -26,6 +29,27 @@ function App() {
   const [inventory, setInventory] = useState([])
   const [stoves, setStoves] = useState(INITIAL_STOVES)
   const [selectedStoveId, setSelectedStoveId] = useState(null)
+  const [saveLoaded, setSaveLoaded] = useState(false)
+
+  // Load any existing save once on startup, before anything can overwrite it.
+  useEffect(() => {
+    loadState()
+      .then((saved) => {
+        if (saved) {
+          setCash(saved.cash)
+          setInventory(saved.inventory)
+          setStoves(saved.stoves)
+        }
+      })
+      .finally(() => setSaveLoaded(true))
+  }, [])
+
+  // Persist on every change, once the initial load attempt has finished
+  // (guards against saving the default state over a real save on first render).
+  useEffect(() => {
+    if (!saveLoaded) return
+    saveState({ cash, inventory, stoves })
+  }, [saveLoaded, cash, inventory, stoves])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -34,7 +58,7 @@ function App() {
   }, [data])
 
   if (error) return <p>Failed to load game data: {error.message}</p>
-  if (!data) return <p>Loading...</p>
+  if (!data || !saveLoaded) return <p>Loading...</p>
 
   const selectedStove = stoves.find((s) => s.id === selectedStoveId) ?? null
   const canAddToSelected =
@@ -76,7 +100,11 @@ function App() {
           s.contents.map((i) => i.tier),
           s.tier
         )
-        return { ...s, cookCompleteAt: Date.now() + seconds * 1000 }
+        // Mutation is decided the moment cooking starts, not at serve time - so it's
+        // fixed and ready to reveal the instant the dish finishes, same "predetermined
+        // before reveal" rule the lever spinner already follows.
+        const mutation = rollMutation(data.mutationOdds, data.mutations)
+        return { ...s, cookCompleteAt: Date.now() + seconds * 1000, mutation }
       })
     )
   }
@@ -84,7 +112,9 @@ function App() {
   function serveStove(stoveId, value) {
     setCash((c) => c + value)
     setStoves((prev) =>
-      prev.map((s) => (s.id === stoveId ? { ...s, contents: [], cookCompleteAt: null } : s))
+      prev.map((s) =>
+        s.id === stoveId ? { ...s, contents: [], cookCompleteAt: null, mutation: null } : s
+      )
     )
   }
 

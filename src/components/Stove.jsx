@@ -31,7 +31,8 @@ export default function Stove({
   const isFillable = isEditable && stove.contents.length < stove.maxSlots
   const canStart = isEditable && stove.contents.length > 0
 
-  const value = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
+  const baseValue = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
+  const value = isDone ? baseValue * (stove.mutation?.priceMultiplier ?? 1) : null
   const dishName = isDone
     ? nameDish(toComboEntries(stove.contents.map((i) => i.index)), wordMap, wordLists)
     : null
@@ -85,6 +86,11 @@ export default function Stove({
 
       {isDone && (
         <div>
+          {stove.mutation && (
+            <p className="mutation-tag">
+              {stove.mutation.name} ({stove.mutation.priceMultiplier}x)
+            </p>
+          )}
           <p className="dish-name">{dishName}</p>
           <p>Ready! Sell for ${value.toFixed(2)}</p>
           <button
