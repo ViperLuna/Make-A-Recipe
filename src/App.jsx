@@ -164,8 +164,9 @@ function App() {
 
   // Number-row hotkeys 1-9,0 act on the matching stove slot: while hovering an
   // inventory item, they drop that ingredient into the stove; otherwise they
-  // select the stove, or instantly sell it if it's already done cooking. A
-  // missing/locked slot, or an already-selected stove, is a no-op either way.
+  // sell it if it's done cooking, start cooking it if it's holding ingredients
+  // but idle, or just select it. A missing/locked slot, or an already-selected
+  // stove, is a no-op either way.
   useEffect(() => {
     if (!data) return
     function handleKeyDown(e) {
@@ -194,6 +195,8 @@ function App() {
           ingredientNames: slot.stove.contents.map((i) => i.name),
           mutation: slot.stove.mutation,
         })
+      } else if (!slot.stove.cookCompleteAt && slot.stove.contents.length > 0) {
+        startCooking(slot.id)
       } else {
         setSelectedStoveId(slot.id)
       }
@@ -201,7 +204,7 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, gridSlots, inventory, hoveredInventoryIndex, wordMap, rebirthCount])
+  }, [data, gridSlots, inventory, hoveredInventoryIndex, wordMap, rebirthCount, activePotions, dex])
 
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
