@@ -41,11 +41,51 @@
   margin-bottom: 1.5rem;
 }
 
-.stove {
-  border: 1px solid #444;
+.stoves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.stove-card {
+  border: 2px solid #444;
   border-radius: 8px;
   padding: 1rem;
-  margin-bottom: 1.5rem;
+  min-width: 160px;
+  cursor: pointer;
+}
+
+.stove-card.selected {
+  border-color: #f5923e;
+}
+
+.stove-card h3 {
+  margin: 0 0 0.25rem;
+}
+
+.slots {
+  font-size: 0.85rem;
+  color: #999;
+  margin-bottom: 0.5rem;
+}
+
+.stove-contents {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.stove-contents .empty-slot {
+  color: #666;
+  font-style: italic;
+}
+
+.hint {
+  color: #999;
+  font-size: 0.9rem;
 }
 
 .inventory ul {
