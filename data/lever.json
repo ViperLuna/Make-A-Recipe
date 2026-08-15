@@ -1,0 +1,17 @@
+{
+  "mechanismSlots": {
+    "note": "Each slot spins independently and simultaneously on every lever pull. Room to extend past 3 later (up to 5-6).",
+    "slot1": { "cost": 0, "note": "free, starting slot" },
+    "slot2": { "cost": 100000 },
+    "slot3": { "cost": 1500000 }
+  },
+  "spinAnimation": {
+    "note": "Result is predetermined before animation starts. Filler frames use the same weighted-rarity RNG as real pulls, then force the final frame to the real result.",
+    "baseDurationSeconds": 3.0,
+    "flickerIntervalRange": { "startMs": 50, "endMs": 450, "note": "cycling interval accelerates fast then decelerates to a stop" },
+    "upgrades": [
+      { "tier": 1, "durationSeconds": 1.8, "cost": 200000 },
+      { "tier": 2, "durationSeconds": 1.0, "cost": 4000000 }
+    ]
+  }
+}

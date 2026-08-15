@@ -1,0 +1,8 @@
+{
+  "trigger": "On dish completion (stove finishes cooking), check the combo's Lifetime 'ever discovered' bit BEFORE setting it.",
+  "rule": "If bit is currently 0: show 'New Dish Discovered' popup (dish name + ingredients), then set bit to 1. If bit is already 1: no popup, serve normally.",
+  "scopeNote": "Tied to Lifetime only, not Current. Current resets every rebirth and would re-trigger 'new' popups for already-known dishes if used instead - Lifetime keeps the celebration meaningful permanently.",
+  "queueing": "If multiple stoves finish simultaneously and more than one produces a genuinely new discovery, queue popups one at a time rather than showing them stacked.",
+  "display": "Shows the dish name/info. Auto-dismisses after 10 seconds, or player can click OK to close early. The 10s timer starts when a popup actually becomes visible (not when it enters the queue), so queued popups aren't shortchanged.",
+  "openQuestion": "Should the same before-flip-check pattern apply to first-ever mutation on a given dish (using the mutation-ever-seen bits already tracked in the Lifetime blob)? Not yet confirmed."
+}

@@ -1,0 +1,21 @@
+{
+  "note": "Luck bonus is added directly to the red/mythical lever-pull chance. The added amount is subtracted proportionally from the other 5 tiers so total stays 100%. Mitt and potion bonuses stack additively.",
+  "designTarget": "~1-in-5 (20%) red chance at max mitt + max potion, referencing fishing-game 'mythical every ~5 casts' convention",
+  "baseRedChance": 0.01,
+  "mittRedBonus": {
+    "white": 0.00,
+    "green": 0.01,
+    "blue": 0.02,
+    "purple": 0.04,
+    "orange": 0.07,
+    "red": 0.12
+  },
+  "luckPotionRedBonus": {
+    "luckI": 0.01,
+    "luckII": 0.02,
+    "luckIII": 0.03,
+    "luckIV": 0.05,
+    "luckV": 0.07
+  },
+  "maxCombinedRedChance": 0.20
+}

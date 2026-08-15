@@ -1,0 +1,36 @@
+{
+  "priceFormula": "price = tierBase * 5^(slotCount - 1)",
+  "tierBases": {
+    "white": 50,
+    "green": 5000,
+    "blue": 500000,
+    "purple": 50000000,
+    "orange": 10000000000000,
+    "red": 10000000000000000
+  },
+  "stoves": [
+    { "tier": "white",  "baseName": "Basic",   "slotCount": 1, "name": "Basic Stove", "price": 50 },
+
+    { "tier": "green",  "baseName": "Kindle",  "slotCount": 1, "name": "Kindle I",   "price": 5000 },
+    { "tier": "green",  "baseName": "Kindle",  "slotCount": 2, "name": "Kindle II",  "price": 25000 },
+
+    { "tier": "blue",   "baseName": "Ember",   "slotCount": 1, "name": "Ember I",    "price": 500000 },
+    { "tier": "blue",   "baseName": "Ember",   "slotCount": 2, "name": "Ember II",   "price": 2500000 },
+    { "tier": "blue",   "baseName": "Ember",   "slotCount": 3, "name": "Ember III",  "price": 12500000 },
+
+    { "tier": "purple", "baseName": "Blaze",   "slotCount": 1, "name": "Blaze I",    "price": 50000000 },
+    { "tier": "purple", "baseName": "Blaze",   "slotCount": 2, "name": "Blaze II",   "price": 250000000 },
+    { "tier": "purple", "baseName": "Blaze",   "slotCount": 3, "name": "Blaze III",  "price": 1250000000 },
+    { "tier": "purple", "baseName": "Blaze",   "slotCount": 4, "name": "Blaze IV",   "price": 6250000000 },
+
+    { "tier": "orange", "baseName": "Inferno", "slotCount": 1, "name": "Inferno I",  "price": 10000000000000 },
+    { "tier": "orange", "baseName": "Inferno", "slotCount": 2, "name": "Inferno II", "price": 50000000000000 },
+    { "tier": "orange", "baseName": "Inferno", "slotCount": 3, "name": "Inferno III","price": 250000000000000 },
+    { "tier": "orange", "baseName": "Inferno", "slotCount": 4, "name": "Inferno IV", "price": 1250000000000000 },
+
+    { "tier": "red",    "baseName": "Solaris", "slotCount": 1, "name": "Solaris I",  "price": 10000000000000000 },
+    { "tier": "red",    "baseName": "Solaris", "slotCount": 2, "name": "Solaris II", "price": 50000000000000000 },
+    { "tier": "red",    "baseName": "Solaris", "slotCount": 3, "name": "Solaris III","price": 250000000000000000 },
+    { "tier": "red",    "baseName": "Solaris", "slotCount": 4, "name": "Solaris IV", "price": 1250000000000000000 }
+  ]
+}

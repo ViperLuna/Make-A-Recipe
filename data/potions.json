@@ -1,0 +1,25 @@
+{
+  "note": "Consumable, temporary. Active potion effects survive rebirth (run on their own wall-clock timer, unaffected by the rebirth wipe). Luck stacks additively with the equipped mitt; Speed multiplies stove cook time.",
+  "priceCurve": "10000 * 4^(rank-1)",
+  "durationFormula": "durationMinutes = 5 + 3.75 * (rank - 1)",
+  "luckPotions": [
+    { "rank": 1, "name": "Luck I",   "price": 10000,   "redBonus": 0.01, "durationMinutes": 5.00 },
+    { "rank": 2, "name": "Luck II",  "price": 40000,   "redBonus": 0.02, "durationMinutes": 8.75 },
+    { "rank": 3, "name": "Luck III","price": 160000,  "redBonus": 0.03, "durationMinutes": 12.50 },
+    { "rank": 4, "name": "Luck IV", "price": 640000,  "redBonus": 0.05, "durationMinutes": 16.25 },
+    { "rank": 5, "name": "Luck V",  "price": 2560000, "redBonus": 0.07, "durationMinutes": 20.00 }
+  ],
+  "speedPotions": [
+    { "rank": 1, "name": "Speed I",   "price": 10000,   "cookSpeedMultiplier": 2,  "durationMinutes": 5.00 },
+    { "rank": 2, "name": "Speed II",  "price": 40000,   "cookSpeedMultiplier": 4,  "durationMinutes": 8.75 },
+    { "rank": 3, "name": "Speed III","price": 160000,  "cookSpeedMultiplier": 6,  "durationMinutes": 12.50 },
+    { "rank": 4, "name": "Speed IV", "price": 640000,  "cookSpeedMultiplier": 8,  "durationMinutes": 16.25 },
+    { "rank": 5, "name": "Speed V",  "price": 2560000, "cookSpeedMultiplier": 10, "durationMinutes": 20.00 }
+  ],
+  "valuePotions": {
+    "status": "planned, not yet designed",
+    "concept": "Temporary sell-value multiplier, stacking on top of the permanent rebirth sell-value bonus, same pattern as Luck Potion stacking on the Mitt. Ranks/pricing/multiplier curve TBD once playtesting shows whether it's worth the spend at that point in progression.",
+    "modelingNote": "Test run (15min assumed duration, flat Luck/Speed-style price curve) showed the $2.56M rank-V-equivalent price pays back in under 30 seconds once a player has 2+ mid-tier stoves running - basically a trivial auto-buy past early game, not a real decision. Value Potion likely needs a price that scales with progression stage (more like the stove/mitt tier pricing) rather than the flat consumable curve Luck/Speed use, or the choice stops being interesting once established.",
+    "alsoUndefined": "Potion duration was never set for ANY potion type (Luck, Speed, or this one) - needs to be decided regardless of Value Potion's fate."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "note": "Two-stage roll on dish completion. Mitts do NOT affect this (mitts are lever-only). Luck Potions affect stage 2 only.",
+  "stage1_willItMutate": {
+    "chance": 0.20,
+    "note": "Flat, not luck-influenced. 80% of dishes stay plain."
+  },
+  "stage2_whichMutation": {
+    "formula": "weight = 1 / priceMultiplier (from mutations.json), normalized to sum to 100%",
+    "note": "Reuses the existing price-multiplier table instead of a separate hand-picked curve - rarer/pricier mutations are naturally rarer to land.",
+    "baseWeights": {
+      "shiny": 0.396,
+      "electric": 0.264,
+      "golden": 0.132,
+      "zombie": 0.088,
+      "sparkling": 0.050,
+      "frozen": 0.031,
+      "platinum": 0.018,
+      "rainbow": 0.011,
+      "cursed": 0.007,
+      "void": 0.004
+    },
+    "luckPotionEffect": "Adds the same per-rank bonus already defined in luck.json's luckPotionRedBonus (Luck I-V: +1/2/3/5/7%) directly onto Void's share, taken proportionally from the other 9 mutations. Same mechanism as lever luck, different table."
+  }
+}

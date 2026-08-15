@@ -1,0 +1,15 @@
+{
+  "note": "Uniform formula, no per-ingredient special-casing. Applies identically regardless of which specific ingredients are involved.",
+  "comboValueFormula": "comboValue = sum(ingredientCosts) * (1 + 0.15 * ingredientCount)",
+  "finalSellValueFormula": "finalValue = comboValue * mutationMultiplier",
+  "mutationMultiplierDefault": 1.0,
+  "note2": "mutationMultiplier comes from mutations.json (1x for a 'plain'/unmutated dish, 2x-200x for the 10 mutation types)",
+  "example": {
+    "ingredients": ["Carrot ($2)", "Potato ($3)", "Onion ($5)"],
+    "ingredientCount": 3,
+    "sum": 10,
+    "comboBonusMultiplier": 1.45,
+    "comboValue": 14.5,
+    "note3": "comboValue is the sell price for a 'plain' dish; multiply by a mutation's multiplier for a mutated one"
+  }
+}

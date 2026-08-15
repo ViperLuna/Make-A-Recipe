@@ -1,0 +1,11 @@
+{
+  "note": "One mitt per tier, worn (not placed). Price reuses the same tierBases as stoves.json. Red-tier bonus values come from luck.json's mittRedBonus.",
+  "mitts": [
+    { "tier": "white",  "name": "White Mitt",  "price": 50 },
+    { "tier": "green",  "name": "Green Mitt",  "price": 5000 },
+    { "tier": "blue",   "name": "Blue Mitt",   "price": 500000 },
+    { "tier": "purple", "name": "Purple Mitt", "price": 50000000 },
+    { "tier": "orange", "name": "Orange Mitt", "price": 10000000000000 },
+    { "tier": "red",    "name": "Red Mitt",    "price": 10000000000000000 }
+  ]
+}

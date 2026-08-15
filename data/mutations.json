@@ -1,0 +1,14 @@
+{
+  "mutations": [
+    { "bitIndex": 0, "name": "Shiny",     "priceMultiplier": 2 },
+    { "bitIndex": 1, "name": "Electric",  "priceMultiplier": 3 },
+    { "bitIndex": 2, "name": "Golden",    "priceMultiplier": 6 },
+    { "bitIndex": 3, "name": "Zombie",    "priceMultiplier": 9 },
+    { "bitIndex": 4, "name": "Sparkling", "priceMultiplier": 16 },
+    { "bitIndex": 5, "name": "Frozen",    "priceMultiplier": 26 },
+    { "bitIndex": 6, "name": "Platinum",  "priceMultiplier": 43 },
+    { "bitIndex": 7, "name": "Rainbow",   "priceMultiplier": 72 },
+    { "bitIndex": 8, "name": "Cursed",    "priceMultiplier": 120 },
+    { "bitIndex": 9, "name": "Void",      "priceMultiplier": 200 }
+  ]
+}

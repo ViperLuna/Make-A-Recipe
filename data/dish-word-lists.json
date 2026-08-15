@@ -1,0 +1,42 @@
+{
+  "descriptors": [
+    "Crisp", "Crunchy", "Silky", "Velvety", "Fluffy", "Creamy", "Chewy", "Tender", "Flaky", "Grainy",
+    "Smooth", "Coarse", "Springy", "Gooey", "Brittle",
+
+    "Savory", "Zesty", "Tangy", "Sweet", "Sour", "Bitter", "Spicy", "Buttery", "Smoky", "Peppery",
+    "Salty", "Mellow", "Robust", "Piquant", "Nutty",
+
+    "Fiery", "Frosty", "Blazing", "Icy", "Toasty", "Scorching", "Chilled", "Sizzling", "Smoldering", "Glacial",
+    "Sunbaked", "Steaming", "Charred", "Molten",
+
+    "Radiant", "Glowing", "Glistening", "Shimmering", "Vivid", "Dazzling", "Luminous", "Gleaming",
+    "Amber", "Crimson", "Emerald", "Silver", "Opal",
+
+    "Happy", "Cheerful", "Jolly", "Merry", "Bold", "Daring", "Feisty", "Sassy", "Playful", "Cheeky",
+    "Wistful", "Gallant", "Noble", "Cunning", "Sly",
+
+    "Hearty", "Grand", "Mighty", "Colossal", "Petite", "Modest", "Lavish", "Humble", "Opulent", "Bountiful",
+    "Generous", "Plentiful", "Abundant", "Sparse", "Compact",
+
+    "Ancient", "Enchanted", "Divine", "Celestial", "Ethereal", "Mystic", "Arcane", "Sacred",
+    "Forbidden", "Primal", "Timeless", "Eternal",
+
+    "Wild", "Feral", "Rustic", "Untamed", "Windswept", "Sunlit", "Dewy", "Earthy", "Verdant", "Blooming",
+    "Wholesome", "Lush", "Ripe", "Fresh", "Pristine",
+
+    "Whimsical", "Mysterious", "Peculiar", "Quirky", "Curious", "Eccentric", "Absurd", "Giddy", "Dreamy", "Fanciful",
+    "Magical", "Surreal", "Bizarre", "Wondrous", "Marvelous",
+
+    "Thunderous", "Roaring", "Explosive", "Punchy", "Turbocharged", "Supreme", "Ultimate", "Prime", "Elite", "Deluxe",
+    "Premium", "Superior", "Masterful", "Heroic", "Triumphant",
+
+    "Toothsome", "Plush", "Jubilant", "Blushing", "Whirling", "Snappy"
+  ],
+  "quantityModifiers": [
+    "Double", "Triple", "Quadruple"
+  ],
+  "suffixes": [
+    "Stew", "Bowl", "Platter", "Entree", "Feast", "Bake", "Surprise", "Delight", "Medley", "Dish",
+    "Casserole", "Roast", "Blend", "Special", "Creation", "Plate", "Concoction", "Masterpiece", "Serving", "Course"
+  ]
+}

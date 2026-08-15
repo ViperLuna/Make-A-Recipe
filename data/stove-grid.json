@@ -1,0 +1,16 @@
+{
+  "totalSlots": 10,
+  "formula": "slotCost(n) = 1000 * 25^(n-2) for n >= 2; slot 1 is free (starting stove)",
+  "slots": [
+    { "slot": 1,  "cost": 0 },
+    { "slot": 2,  "cost": 1000 },
+    { "slot": 3,  "cost": 25000 },
+    { "slot": 4,  "cost": 625000 },
+    { "slot": 5,  "cost": 15625000 },
+    { "slot": 6,  "cost": 390625000 },
+    { "slot": 7,  "cost": 9765625000 },
+    { "slot": 8,  "cost": 244140625000 },
+    { "slot": 9,  "cost": 6103515625000 },
+    { "slot": 10, "cost": 152587890625000 }
+  ]
+}
