@@ -12,6 +12,10 @@ import './App.css'
 
 const STARTING_CASH = 25
 
+// Must match public/data/lever.json's mechanismSlots keys (slot1..slot3).
+const TOTAL_MECHANISM_SLOTS = 3
+const INITIAL_MECHANISM_SLOTS = Array.from({ length: TOTAL_MECHANISM_SLOTS }, (_, i) => i === 0)
+
 // Must match public/data/stove-grid.json's totalSlots.
 const TOTAL_GRID_SLOTS = 10
 
@@ -51,7 +55,8 @@ function migrateOldStoves(oldStoves) {
 function App() {
   const { data, error } = useGameData()
   const [cash, setCash] = useState(STARTING_CASH)
-  const [pulled, setPulled] = useState(null)
+  const [mechanismSlots, setMechanismSlots] = useState(INITIAL_MECHANISM_SLOTS)
+  const [pulledResults, setPulledResults] = useState(Array(TOTAL_MECHANISM_SLOTS).fill(null))
   const [inventory, setInventory] = useState([])
   const [gridSlots, setGridSlots] = useState(INITIAL_GRID_SLOTS)
   const [selectedStoveId, setSelectedStoveId] = useState(null)
@@ -66,6 +71,8 @@ function App() {
           setCash(saved.cash)
           setInventory(saved.inventory)
           setGridSlots(saved.gridSlots ?? migrateOldStoves(saved.stoves ?? []))
+          // Pre-mechanism-slot saves won't have this field - default to just slot 1 unlocked.
+          setMechanismSlots(saved.mechanismSlots ?? INITIAL_MECHANISM_SLOTS)
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -75,8 +82,8 @@ function App() {
   // (guards against saving the default state over a real save on first render).
   useEffect(() => {
     if (!saveLoaded) return
-    saveState({ cash, inventory, gridSlots })
-  }, [saveLoaded, cash, inventory, gridSlots])
+    saveState({ cash, inventory, gridSlots, mechanismSlots })
+  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -92,11 +99,25 @@ function App() {
   const canAddToSelected =
     selectedStove && !selectedStove.cookCompleteAt && selectedStove.contents.length < selectedStove.maxSlots
 
-  function buyPulled() {
-    if (!pulled || cash < pulled.price) return
-    setCash((c) => c - pulled.price)
-    setInventory((inv) => [...inv, pulled])
-    setPulled(null)
+  function handlePullResult(index, result) {
+    setPulledResults((prev) => prev.map((r, i) => (i === index ? result : r)))
+  }
+
+  function buyPulledAt(index) {
+    const item = pulledResults[index]
+    if (!item || cash < item.price) return
+    setCash((c) => c - item.price)
+    setInventory((inv) => [...inv, item])
+    setPulledResults((prev) => prev.map((r, i) => (i === index ? null : r)))
+  }
+
+  function unlockMechanism(index) {
+    const unlockedCount = mechanismSlots.filter(Boolean).length
+    if (index !== unlockedCount) return // must unlock in order
+    const cost = data.lever.mechanismSlots[`slot${index + 1}`]?.cost
+    if (cost == null || cash < cost) return
+    setCash((c) => c - cost)
+    setMechanismSlots((prev) => prev.map((u, i) => (i === index ? true : u)))
   }
 
   function addToSelectedStove(inventoryIndex) {
@@ -187,15 +208,34 @@ function App() {
       <h1>Make A Recipe</h1>
       <p className="cash">${cash.toFixed(2)}</p>
 
-      <Lever ingredientsData={data.ingredients} leverData={data.lever} onResult={setPulled} />
+      <Lever
+        ingredientsData={data.ingredients}
+        leverData={data.lever}
+        mechanismCount={mechanismSlots.filter(Boolean).length}
+        onResult={handlePullResult}
+      />
 
-      {pulled && (
-        <div className="pulled-actions">
-          <button onClick={buyPulled} disabled={cash < pulled.price}>
-            Buy for ${pulled.price}
-          </button>
-        </div>
-      )}
+      <div className="pulled-actions">
+        {pulledResults.map(
+          (result, i) =>
+            mechanismSlots[i] &&
+            result && (
+              <button key={i} onClick={() => buyPulledAt(i)} disabled={cash < result.price}>
+                Buy {result.name} for ${result.price}
+              </button>
+            )
+        )}
+        {(() => {
+          const nextIndex = mechanismSlots.filter(Boolean).length
+          if (nextIndex >= TOTAL_MECHANISM_SLOTS) return null
+          const cost = data.lever.mechanismSlots[`slot${nextIndex + 1}`]?.cost ?? 0
+          return (
+            <button onClick={() => unlockMechanism(nextIndex)} disabled={cash < cost}>
+              Unlock lever mechanism {nextIndex + 1} for ${cost.toLocaleString()}
+            </button>
+          )
+        })()}
+      </div>
 
       <button className="shop-toggle" onClick={() => setShopOpen((o) => !o)}>
         {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
