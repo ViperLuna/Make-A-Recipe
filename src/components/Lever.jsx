@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { pullIngredient } from '../game/economy'
 
 const TIER_COLORS = {
@@ -10,41 +10,57 @@ const TIER_COLORS = {
   red: '#f53e3e',
 }
 
-export default function Lever({ ingredientsData, leverData, onResult }) {
-  const [spinning, setSpinning] = useState(false)
+// One independent spinner. All boxes share the same trigger and duration (so
+// they start and finish together), but each rolls its own real result and its
+// own filler frames - genuinely independent outcomes, not copies of each other.
+function SpinnerBox({ ingredientsData, leverData, trigger, onResult }) {
   const [display, setDisplay] = useState(null)
-  const timeoutRef = useRef(null)
 
-  function pull() {
-    if (spinning) return
-    setSpinning(true)
-
+  useEffect(() => {
+    if (trigger === 0) return
     const realResult = pullIngredient(ingredientsData, leverData.basePullChance)
     const { startMs, endMs } = leverData.spinAnimation.flickerIntervalRange
     const totalMs = leverData.spinAnimation.baseDurationSeconds * 1000
-
     const startTime = performance.now()
+    let timeoutId
 
     function tick() {
       const elapsed = performance.now() - startTime
       if (elapsed >= totalMs) {
         setDisplay(realResult)
-        setSpinning(false)
-        // Deliberately only fires when the spin actually finishes: if the player
-        // pulls again before buying the current result, that old result (and its
-        // Buy button) stays live for the full duration of the new spin, giving
-        // them a window to still buy it before this call overwrites it. Keep
-        // this - it's an intentional kept "glitch," not a bug to fix.
+        // Same deliberate rule as before: only fires on completion, so a result
+        // from a previous spin stays buyable for the full duration of this one.
         onResult(realResult)
         return
       }
       const progress = elapsed / totalMs
       const interval = startMs + (endMs - startMs) * progress
-      const filler = pullIngredient(ingredientsData, leverData.basePullChance)
-      setDisplay(filler)
-      timeoutRef.current = setTimeout(tick, interval)
+      setDisplay(pullIngredient(ingredientsData, leverData.basePullChance))
+      timeoutId = setTimeout(tick, interval)
     }
     tick()
+    return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger])
+
+  return (
+    <div className="lever-box" style={{ borderColor: display ? TIER_COLORS[display.tier] : '#888' }}>
+      <span className="lever-word" style={{ color: display ? TIER_COLORS[display.tier] : '#888' }}>
+        {display ? display.name.toUpperCase() : '???'}
+      </span>
+    </div>
+  )
+}
+
+export default function Lever({ ingredientsData, leverData, mechanismCount, onResult }) {
+  const [trigger, setTrigger] = useState(0)
+  const [spinning, setSpinning] = useState(false)
+
+  function pull() {
+    if (spinning) return
+    setSpinning(true)
+    setTrigger((t) => t + 1)
+    setTimeout(() => setSpinning(false), leverData.spinAnimation.baseDurationSeconds * 1000)
   }
 
   // Spacebar pulls the lever too, matching the button.
@@ -57,20 +73,21 @@ export default function Lever({ ingredientsData, leverData, onResult }) {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spinning])
 
   return (
     <div className="lever">
-      <div
-        className="lever-box"
-        style={{ borderColor: display ? TIER_COLORS[display.tier] : '#888' }}
-      >
-        <span
-          className="lever-word"
-          style={{ color: display ? TIER_COLORS[display.tier] : '#888' }}
-        >
-          {display ? display.name.toUpperCase() : '???'}
-        </span>
+      <div className="lever-boxes">
+        {Array.from({ length: mechanismCount }).map((_, i) => (
+          <SpinnerBox
+            key={i}
+            ingredientsData={ingredientsData}
+            leverData={leverData}
+            trigger={trigger}
+            onResult={(result) => onResult(i, result)}
+          />
+        ))}
       </div>
       <button onClick={pull} disabled={spinning}>
         {spinning ? 'Pulling...' : 'Pull Lever'}
