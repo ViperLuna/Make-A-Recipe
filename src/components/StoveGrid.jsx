@@ -8,6 +8,7 @@ export default function StoveGrid({
   onStartCooking,
   onServe,
   onRemove,
+  onRemoveStove,
   wordMap,
   wordLists,
   StoveComponent,
@@ -45,6 +46,7 @@ export default function StoveGrid({
             onStartCooking={onStartCooking}
             onServe={onServe}
             onRemove={onRemove}
+            onRemoveStove={onRemoveStove}
             wordMap={wordMap}
             wordLists={wordLists}
           />

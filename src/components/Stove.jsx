@@ -9,10 +9,12 @@ export default function Stove({
   onStartCooking,
   onServe,
   onRemove,
+  onRemoveStove,
   wordMap,
   wordLists,
 }) {
   const [remaining, setRemaining] = useState(null)
+  const [confirmingRemoveStove, setConfirmingRemoveStove] = useState(false)
 
   useEffect(() => {
     if (!stove.cookCompleteAt) {
@@ -30,6 +32,11 @@ export default function Stove({
   const isEditable = !stove.cookCompleteAt
   const isFillable = isEditable && stove.contents.length < stove.maxSlots
   const canStart = isEditable && stove.contents.length > 0
+
+  // Drop the confirmation state if the player clicks away to another stove.
+  useEffect(() => {
+    if (!selected) setConfirmingRemoveStove(false)
+  }, [selected])
 
   const baseValue = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
   const value = isDone ? baseValue * (stove.mutation?.priceMultiplier ?? 1) : null
@@ -101,6 +108,43 @@ export default function Stove({
           >
             Serve & Sell
           </button>
+        </div>
+      )}
+
+      {selected && isEditable && (
+        <div className="remove-stove-section">
+          {!confirmingRemoveStove ? (
+            <button
+              className="remove-stove-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setConfirmingRemoveStove(true)
+              }}
+            >
+              Remove Stove
+            </button>
+          ) : (
+            <>
+              <p className="confirm-text">Remove this stove?</p>
+              <button
+                className="confirm-remove-btn"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemoveStove(stove.id)
+                }}
+              >
+                Yes, remove it
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setConfirmingRemoveStove(false)
+                }}
+              >
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
