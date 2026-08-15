@@ -5,12 +5,15 @@ export const TIER_INDEX = Object.fromEntries(TIER_ORDER.map((t, i) => [t, i]))
 
 // Picks a random ingredient from ingredients.json, honoring lever.json's basePullChance
 // tier weights (mitt/luck-potion bonuses from luck.json are not applied yet - core loop only).
+// The returned object carries its stable array index (needed by naming.js's word map).
 export function pullIngredient(ingredientsData, basePullChance, rand = Math.random) {
   // basePullChance also carries a "note" documentation string in the JSON file -
   // only pull actual tier weights out of it, never trust every key blindly.
   const weights = Object.fromEntries(TIER_ORDER.map((t) => [t, basePullChance[t]]))
   const tier = weightedPick(weights, rand)
-  const pool = ingredientsData.ingredients.filter((ing) => ing.tier === tier)
+  const pool = ingredientsData.ingredients
+    .map((ing, index) => ({ ...ing, index }))
+    .filter((ing) => ing.tier === tier)
   const choice = pool[Math.floor(rand() * pool.length)]
   return choice
 }
