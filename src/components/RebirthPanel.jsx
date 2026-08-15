@@ -18,7 +18,7 @@ export default function RebirthPanel({ rebirthData, rebirthCount, cash, onRebirt
         </div>
         <p>Rebirths so far: {rebirthCount}</p>
         <p>Current sell value multiplier: {currentMult.toFixed(2)}x</p>
-        <p>Next rebirth cost: {formatMoney(cost)}</p>
+        <p>Current rebirth cost: {formatMoney(cost)}</p>
         <p className="hint">
           Rebirthing wipes your cash, inventory, stove grid, lever mechanism slots, and equipped
           mitt back to a fresh game. Your Dex and any active potions are kept. In exchange, sell
