@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { comboValue } from '../game/economy'
 
-export default function Stove({ stove, selected, onSelect, onStartCooking, onServe }) {
+export default function Stove({ stove, selected, onSelect, onStartCooking, onServe, onRemove }) {
   const [remaining, setRemaining] = useState(null)
 
   useEffect(() => {
@@ -17,8 +17,9 @@ export default function Stove({ stove, selected, onSelect, onStartCooking, onSer
 
   const isCooking = stove.cookCompleteAt && remaining > 0
   const isDone = stove.cookCompleteAt && remaining === 0
-  const isFillable = !stove.cookCompleteAt && stove.contents.length < stove.maxSlots
-  const canStart = !stove.cookCompleteAt && stove.contents.length > 0
+  const isEditable = !stove.cookCompleteAt
+  const isFillable = isEditable && stove.contents.length < stove.maxSlots
+  const canStart = isEditable && stove.contents.length > 0
 
   const value = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
 
@@ -33,7 +34,20 @@ export default function Stove({ stove, selected, onSelect, onStartCooking, onSer
       </p>
       <ul className="stove-contents">
         {stove.contents.map((item, i) => (
-          <li key={i}>{item.name}</li>
+          <li key={i}>
+            {item.name}
+            {isEditable && (
+              <button
+                className="remove-btn"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemove(stove.id, i)
+                }}
+              >
+                Remove
+              </button>
+            )}
+          </li>
         ))}
         {isFillable &&
           Array.from({ length: stove.maxSlots - stove.contents.length }).map((_, i) => (
@@ -52,7 +66,7 @@ export default function Stove({ stove, selected, onSelect, onStartCooking, onSer
             onStartCooking(stove.id)
           }}
         >
-          Start Cooking
+          Cook
         </button>
       )}
 

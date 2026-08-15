@@ -45,19 +45,19 @@ function App() {
     const item = inventory[inventoryIndex]
     setInventory((inv) => inv.filter((_, i) => i !== inventoryIndex))
     setStoves((prev) =>
-      prev.map((s) => {
-        if (s.id !== selectedStoveId) return s
-        const contents = [...s.contents, item]
-        // Auto-start cooking the moment the stove is filled to capacity.
-        if (contents.length === s.maxSlots) {
-          const seconds = totalCookSeconds(
-            contents.map((i) => i.tier),
-            s.tier
-          )
-          return { ...s, contents, cookCompleteAt: Date.now() + seconds * 1000 }
-        }
-        return { ...s, contents }
-      })
+      prev.map((s) => (s.id === selectedStoveId ? { ...s, contents: [...s.contents, item] } : s))
+    )
+  }
+
+  function removeFromStove(stoveId, contentIndex) {
+    const stove = stoves.find((s) => s.id === stoveId)
+    if (!stove || stove.cookCompleteAt) return
+    const item = stove.contents[contentIndex]
+    setInventory((inv) => [...inv, item])
+    setStoves((prev) =>
+      prev.map((s) =>
+        s.id === stoveId ? { ...s, contents: s.contents.filter((_, i) => i !== contentIndex) } : s
+      )
     )
   }
 
@@ -105,6 +105,7 @@ function App() {
             onSelect={setSelectedStoveId}
             onStartCooking={startCooking}
             onServe={serveStove}
+            onRemove={removeFromStove}
           />
         ))}
       </div>
@@ -117,9 +118,11 @@ function App() {
           {inventory.map((item, i) => (
             <li key={i}>
               {item.name} (${item.price})
-              <button onClick={() => addToSelectedStove(i)} disabled={!canAddToSelected}>
-                Add
-              </button>
+              {selectedStove && (
+                <button onClick={() => addToSelectedStove(i)} disabled={!canAddToSelected}>
+                  Add
+                </button>
+              )}
             </li>
           ))}
         </ul>
