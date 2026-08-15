@@ -10,6 +10,7 @@ import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
 import StoveShop from './components/StoveShop'
 import MittShop from './components/MittShop'
+import PotionShop from './components/PotionShop'
 import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
 import './App.css'
@@ -68,6 +69,8 @@ function App() {
   const [shopOpen, setShopOpen] = useState(false)
   const [mittShopOpen, setMittShopOpen] = useState(false)
   const [equippedMittTier, setEquippedMittTier] = useState(null)
+  const [potionShopOpen, setPotionShopOpen] = useState(false)
+  const [activePotions, setActivePotions] = useState({ luck: null, speed: null })
   const [dexOpen, setDexOpen] = useState(false)
   // Lifetime dex only, for now - "Current" only makes sense once rebirth (which
   // resets it) exists, so building that half now would be building against
@@ -89,6 +92,10 @@ function App() {
           setDex(saved.dex ?? {})
           // Pre-mitt saves won't have this field either - default to no mitt equipped.
           setEquippedMittTier(saved.equippedMittTier ?? null)
+          // Pre-potion saves won't have this field either - default to none active.
+          // (Active potions are meant to survive things like rebirth, so restoring
+          // the raw expiresAt timestamp is correct even across a reload/restart.)
+          setActivePotions(saved.activePotions ?? { luck: null, speed: null })
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -98,8 +105,8 @@ function App() {
   // (guards against saving the default state over a real save on first render).
   useEffect(() => {
     if (!saveLoaded) return
-    saveState({ cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier })
-  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier])
+    saveState({ cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier, activePotions })
+  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier, activePotions])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -131,6 +138,24 @@ function App() {
     if (cash < mitt.price || mitt.tier === equippedMittTier) return
     setCash((c) => c - mitt.price)
     setEquippedMittTier(mitt.tier)
+  }
+
+  function buyLuckPotion(potion) {
+    if (cash < potion.price) return
+    setCash((c) => c - potion.price)
+    setActivePotions((prev) => ({
+      ...prev,
+      luck: { rank: potion.rank, expiresAt: Date.now() + potion.durationMinutes * 60000 },
+    }))
+  }
+
+  function buySpeedPotion(potion) {
+    if (cash < potion.price) return
+    setCash((c) => c - potion.price)
+    setActivePotions((prev) => ({
+      ...prev,
+      speed: { rank: potion.rank, expiresAt: Date.now() + potion.durationMinutes * 60000 },
+    }))
   }
 
   function unlockMechanism(index) {
@@ -168,13 +193,20 @@ function App() {
   }
 
   function startCooking(stoveId) {
+    const speedPotion =
+      activePotions.speed && activePotions.speed.expiresAt > Date.now() ? activePotions.speed : null
+    const speedMultiplier = speedPotion
+      ? data.potions.speedPotions[speedPotion.rank - 1].cookSpeedMultiplier
+      : 1
+
     setGridSlots((prev) =>
       prev.map((s) => {
         if (s.id !== stoveId || !s.stove || s.stove.contents.length === 0 || s.stove.cookCompleteAt) return s
-        const seconds = totalCookSeconds(
-          s.stove.contents.map((i) => i.tier),
-          s.stove.tier
-        )
+        const seconds =
+          totalCookSeconds(
+            s.stove.contents.map((i) => i.tier),
+            s.stove.tier
+          ) / speedMultiplier
         const mutation = rollMutation(data.mutationOdds, data.mutations)
         return { ...s, stove: { ...s.stove, cookCompleteAt: Date.now() + seconds * 1000, mutation } }
       })
@@ -257,7 +289,11 @@ function App() {
   }
 
   const hasEmptyUnlockedSlot = gridSlots.some((s) => s.unlocked && !s.stove)
-  const redBonus = equippedMittTier ? data.luck.mittRedBonus[equippedMittTier] : 0
+  const mittBonus = equippedMittTier ? data.luck.mittRedBonus[equippedMittTier] : 0
+  const activeLuckPotion =
+    activePotions.luck && activePotions.luck.expiresAt > Date.now() ? activePotions.luck : null
+  const potionBonus = activeLuckPotion ? data.potions.luckPotions[activeLuckPotion.rank - 1].redBonus : 0
+  const redBonus = mittBonus + potionBonus
 
   return (
     <div className="game">
@@ -301,6 +337,9 @@ function App() {
         <button onClick={() => setMittShopOpen((o) => !o)}>
           {mittShopOpen ? 'Close Mitt Shop' : 'Open Mitt Shop'}
         </button>
+        <button onClick={() => setPotionShopOpen((o) => !o)}>
+          {potionShopOpen ? 'Close Potion Shop' : 'Open Potion Shop'}
+        </button>
         <button onClick={() => setDexOpen(true)}>Dex ({Object.keys(dex).length})</button>
       </div>
 
@@ -328,6 +367,16 @@ function App() {
           cash={cash}
           equippedMittTier={equippedMittTier}
           onEquip={buyMitt}
+        />
+      )}
+
+      {potionShopOpen && (
+        <PotionShop
+          potionsData={data.potions}
+          activePotions={activePotions}
+          cash={cash}
+          onBuyLuck={buyLuckPotion}
+          onBuySpeed={buySpeedPotion}
         />
       )}
 
