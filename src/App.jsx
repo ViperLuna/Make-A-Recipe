@@ -4,10 +4,13 @@ import { totalCookSeconds } from './game/economy'
 import { buildIngredientWordMap } from './game/naming'
 import { rollMutation } from './game/mutations'
 import { loadState, saveState } from './game/save'
+import { comboKeyOf } from './game/dex'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
 import StoveShop from './components/StoveShop'
+import Dex from './components/Dex'
+import DiscoveryPopup from './components/DiscoveryPopup'
 import './App.css'
 
 const STARTING_CASH = 25
@@ -62,6 +65,12 @@ function App() {
   const [selectedStoveId, setSelectedStoveId] = useState(null)
   const [saveLoaded, setSaveLoaded] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const [dexOpen, setDexOpen] = useState(false)
+  // Lifetime dex only, for now - "Current" only makes sense once rebirth (which
+  // resets it) exists, so building that half now would be building against
+  // nothing.
+  const [dex, setDex] = useState({})
+  const [discoveryPopup, setDiscoveryPopup] = useState(null)
 
   // Load any existing save once on startup, before anything can overwrite it.
   useEffect(() => {
@@ -73,6 +82,8 @@ function App() {
           setGridSlots(saved.gridSlots ?? migrateOldStoves(saved.stoves ?? []))
           // Pre-mechanism-slot saves won't have this field - default to just slot 1 unlocked.
           setMechanismSlots(saved.mechanismSlots ?? INITIAL_MECHANISM_SLOTS)
+          // Pre-dex saves won't have this field either - default to nothing discovered yet.
+          setDex(saved.dex ?? {})
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -82,8 +93,8 @@ function App() {
   // (guards against saving the default state over a real save on first render).
   useEffect(() => {
     if (!saveLoaded) return
-    saveState({ cash, inventory, gridSlots, mechanismSlots })
-  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots])
+    saveState({ cash, inventory, gridSlots, mechanismSlots, dex })
+  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots, dex])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -159,7 +170,7 @@ function App() {
     )
   }
 
-  function serveStove(stoveId, value) {
+  function serveStove(stoveId, value, dishInfo) {
     setCash((c) => c + value)
     setGridSlots((prev) =>
       prev.map((s) =>
@@ -168,6 +179,29 @@ function App() {
           : s
       )
     )
+
+    const key = comboKeyOf(dishInfo.comboEntries)
+    const existing = dex[key]
+    const mutationName = dishInfo.mutation?.name ?? null
+
+    if (!existing) {
+      setDex((prev) => ({
+        ...prev,
+        [key]: {
+          name: dishInfo.dishName,
+          ingredientCount: dishInfo.comboEntries.reduce((n, e) => n + e.count, 0),
+          ingredientNames: dishInfo.ingredientNames,
+          mutationsSeen: mutationName ? [mutationName] : [],
+        },
+      }))
+      setDiscoveryPopup({ kind: 'dish', name: dishInfo.dishName })
+    } else if (mutationName && !existing.mutationsSeen.includes(mutationName)) {
+      setDex((prev) => ({
+        ...prev,
+        [key]: { ...existing, mutationsSeen: [...existing.mutationsSeen, mutationName] },
+      }))
+      setDiscoveryPopup({ kind: 'mutation', name: mutationName, dishName: dishInfo.dishName })
+    }
   }
 
   function removeStove(stoveId) {
@@ -247,9 +281,18 @@ function App() {
         })()}
       </div>
 
-      <button className="shop-toggle" onClick={() => setShopOpen((o) => !o)}>
-        {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
-      </button>
+      <div className="toolbar">
+        <button className="shop-toggle" onClick={() => setShopOpen((o) => !o)}>
+          {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
+        </button>
+        <button onClick={() => setDexOpen(true)}>Dex ({Object.keys(dex).length})</button>
+      </div>
+
+      {dexOpen && <Dex dex={dex} onClose={() => setDexOpen(false)} />}
+
+      {discoveryPopup && (
+        <DiscoveryPopup popup={discoveryPopup} onClose={() => setDiscoveryPopup(null)} />
+      )}
 
       {shopOpen && (
         <StoveShop
