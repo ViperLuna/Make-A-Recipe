@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 const FILES = [
   'ingredients',
   'stoves',
+  'stove-grid',
+  'stove-shop',
   'lever',
   'dish-word-lists',
   'dish-value',

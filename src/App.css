@@ -113,6 +113,55 @@
   font-size: 0.9rem;
 }
 
+.stove-card.locked,
+.stove-card.empty-grid-slot {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.shop-toggle {
+  margin-bottom: 1rem;
+}
+
+.shop {
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.shop-timer {
+  text-align: center;
+  color: #999;
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+
+.shop-stock {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.shop-stock li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-left: 3px solid #444;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.shop-item-name {
+  font-weight: bold;
+}
+
+.shop-item-detail {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
 .inventory ul {
   list-style: none;
   padding: 0;
