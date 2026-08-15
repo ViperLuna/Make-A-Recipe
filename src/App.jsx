@@ -198,7 +198,7 @@ function App() {
       } else if (!slot.stove.cookCompleteAt && slot.stove.contents.length > 0) {
         startCooking(slot.id)
       } else {
-        setSelectedStoveId(slot.id)
+        toggleSelectStove(slot.id)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -275,6 +275,13 @@ function App() {
   function addToSelectedStove(inventoryIndex) {
     if (selectedStoveId == null) return
     addItemToStove(selectedStoveId, inventoryIndex)
+  }
+
+  // Selecting the already-selected stove deselects it instead - true for a
+  // mouse click unconditionally, and for the hotkey whenever there's nothing
+  // else for it to do (the sell/cook branches above take priority otherwise).
+  function toggleSelectStove(stoveId) {
+    setSelectedStoveId((id) => (id === stoveId ? null : stoveId))
   }
 
   function removeFromStove(stoveId, contentIndex) {
@@ -515,7 +522,7 @@ function App() {
         stoveGridData={data.stoveGrid}
         cash={cash}
         selectedStoveId={selectedStoveId}
-        onSelect={setSelectedStoveId}
+        onSelect={toggleSelectStove}
         onUnlock={unlockSlot}
         onStartCooking={startCooking}
         onServe={serveStove}
