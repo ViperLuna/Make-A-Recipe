@@ -1,15 +1,17 @@
 import { weightedPick } from './rng'
+import { applyRedBonus } from './luck'
 
 export const TIER_ORDER = ['white', 'green', 'blue', 'purple', 'orange', 'red']
 export const TIER_INDEX = Object.fromEntries(TIER_ORDER.map((t, i) => [t, i]))
 
 // Picks a random ingredient from ingredients.json, honoring lever.json's basePullChance
-// tier weights (mitt/luck-potion bonuses from luck.json are not applied yet - core loop only).
+// tier weights, shifted toward red by redBonus (equipped mitt's mittRedBonus from luck.json).
 // The returned object carries its stable array index (needed by naming.js's word map).
-export function pullIngredient(ingredientsData, basePullChance, rand = Math.random) {
+export function pullIngredient(ingredientsData, basePullChance, redBonus = 0, rand = Math.random) {
   // basePullChance also carries a "note" documentation string in the JSON file -
   // only pull actual tier weights out of it, never trust every key blindly.
-  const weights = Object.fromEntries(TIER_ORDER.map((t) => [t, basePullChance[t]]))
+  const baseWeights = Object.fromEntries(TIER_ORDER.map((t) => [t, basePullChance[t]]))
+  const weights = applyRedBonus(baseWeights, redBonus)
   const tier = weightedPick(weights, rand)
   const pool = ingredientsData.ingredients
     .map((ing, index) => ({ ...ing, index }))
