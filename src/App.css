@@ -6,6 +6,12 @@
   font-family: 'Lexend', sans-serif;
 }
 
+.logo {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
 .cash {
   font-size: 1.5rem;
   font-weight: bold;
