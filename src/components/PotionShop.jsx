@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatMoney } from '../game/format'
 
 function PotionList({ title, potions, activePotion, cash, onBuy }) {
   const [now, setNow] = useState(Date.now())
@@ -23,7 +24,7 @@ function PotionList({ title, potions, activePotion, cash, onBuy }) {
           <li key={p.rank}>
             <span className="shop-item-name">{p.name}</span>
             <span className="shop-item-detail">
-              ${p.price.toLocaleString()} - {p.durationMinutes.toFixed(2)} min -{' '}
+              {formatMoney(p.price)} - {p.durationMinutes.toFixed(2)} min -{' '}
               {p.redBonus != null ? `+${(p.redBonus * 100).toFixed(0)}% red` : `${p.cookSpeedMultiplier}x speed`}
             </span>
             <button onClick={() => onBuy(p)} disabled={cash < p.price}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getShopStock } from '../game/shop'
+import { formatMoney } from '../game/format'
 
 const TIER_COLORS = {
   white: '#e8e8e8',
@@ -34,7 +35,7 @@ export default function StoveShop({ shopData, stovesData, cash, hasEmptyUnlocked
               {stove.name.toUpperCase()}
             </span>
             <span className="shop-item-detail">
-              {stove.slotCount} slot{stove.slotCount > 1 ? 's' : ''} - ${stove.price.toLocaleString()} - x{quantity}{' '}
+              {stove.slotCount} slot{stove.slotCount > 1 ? 's' : ''} - {formatMoney(stove.price)} - x{quantity}{' '}
               in stock
             </span>
             <button

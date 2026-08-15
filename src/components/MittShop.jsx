@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getMittShopStock } from '../game/shop'
+import { formatMoney } from '../game/format'
 
 const TIER_COLORS = {
   white: '#e8e8e8',
@@ -36,7 +37,7 @@ export default function MittShop({ mittsData, shopData, luckData, cash, equipped
               {mitt.name.toUpperCase()}
             </span>
             <span className="shop-item-detail">
-              ${mitt.price.toLocaleString()} - +{(luckData.mittRedBonus[mitt.tier] * 100).toFixed(0)}% red chance
+              {formatMoney(mitt.price)} - +{(luckData.mittRedBonus[mitt.tier] * 100).toFixed(0)}% red chance
             </span>
             <button
               onClick={() => onEquip(mitt)}
