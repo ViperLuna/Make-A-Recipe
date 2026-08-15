@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { comboValue } from '../game/economy'
-import { nameDish, toComboEntries } from '../game/naming'
+import { computeReadyDish } from '../game/dish'
 import { formatMoney } from '../game/format'
 
 export default function Stove({
@@ -40,10 +39,10 @@ export default function Stove({
     if (!selected) setConfirmingRemoveStove(false)
   }, [selected])
 
-  const comboEntries = isDone ? toComboEntries(stove.contents.map((i) => i.index)) : null
-  const baseValue = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
-  const value = isDone ? baseValue * (stove.mutation?.priceMultiplier ?? 1) * sellMultiplier : null
-  const dishName = isDone ? nameDish(comboEntries, wordMap, wordLists) : null
+  const ready = isDone ? computeReadyDish(stove, wordMap, wordLists, sellMultiplier) : null
+  const comboEntries = ready?.comboEntries ?? null
+  const value = ready?.value ?? null
+  const dishName = ready?.dishName ?? null
 
   return (
     <div
