@@ -457,7 +457,7 @@ function App() {
       </div>
 
       <div className="toolbar">
-        <button className="shop-toggle" onClick={() => setShopOpen((o) => !o)}>
+        <button onClick={() => setShopOpen((o) => !o)}>
           {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
         </button>
         <button onClick={() => setMittShopOpen((o) => !o)}>
