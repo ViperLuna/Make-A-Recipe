@@ -6,6 +6,7 @@ import { rollMutation } from './game/mutations'
 import { loadState, saveState } from './game/save'
 import { comboKeyOf } from './game/dex'
 import { formatMoney } from './game/format'
+import { rebirthCost, sellValueMultiplier } from './game/rebirth'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
@@ -14,6 +15,7 @@ import MittShop from './components/MittShop'
 import PotionShop from './components/PotionShop'
 import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
+import RebirthPanel from './components/RebirthPanel'
 import './App.css'
 
 const STARTING_CASH = 25
@@ -73,11 +75,11 @@ function App() {
   const [potionShopOpen, setPotionShopOpen] = useState(false)
   const [activePotions, setActivePotions] = useState({ luck: null, speed: null })
   const [dexOpen, setDexOpen] = useState(false)
-  // Lifetime dex only, for now - "Current" only makes sense once rebirth (which
-  // resets it) exists, so building that half now would be building against
-  // nothing.
+  // Lifetime dex - deliberately survives rebirth, unlike everything else it wipes.
   const [dex, setDex] = useState({})
   const [discoveryPopup, setDiscoveryPopup] = useState(null)
+  const [rebirthCount, setRebirthCount] = useState(0)
+  const [rebirthOpen, setRebirthOpen] = useState(false)
 
   // Load any existing save once on startup, before anything can overwrite it.
   useEffect(() => {
@@ -97,6 +99,8 @@ function App() {
           // (Active potions are meant to survive things like rebirth, so restoring
           // the raw expiresAt timestamp is correct even across a reload/restart.)
           setActivePotions(saved.activePotions ?? { luck: null, speed: null })
+          // Pre-rebirth saves won't have this field either - default to no rebirths yet.
+          setRebirthCount(saved.rebirthCount ?? 0)
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -106,8 +110,27 @@ function App() {
   // (guards against saving the default state over a real save on first render).
   useEffect(() => {
     if (!saveLoaded) return
-    saveState({ cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier, activePotions })
-  }, [saveLoaded, cash, inventory, gridSlots, mechanismSlots, dex, equippedMittTier, activePotions])
+    saveState({
+      cash,
+      inventory,
+      gridSlots,
+      mechanismSlots,
+      dex,
+      equippedMittTier,
+      activePotions,
+      rebirthCount,
+    })
+  }, [
+    saveLoaded,
+    cash,
+    inventory,
+    gridSlots,
+    mechanismSlots,
+    dex,
+    equippedMittTier,
+    activePotions,
+    rebirthCount,
+  ])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -289,7 +312,22 @@ function App() {
     )
   }
 
+  function doRebirth() {
+    const cost = rebirthCost(rebirthCount, data.rebirth)
+    if (cash < cost) return
+    setCash(STARTING_CASH)
+    setInventory([])
+    setGridSlots(INITIAL_GRID_SLOTS)
+    setMechanismSlots(INITIAL_MECHANISM_SLOTS)
+    setPulledResults(Array(TOTAL_MECHANISM_SLOTS).fill(null))
+    setSelectedStoveId(null)
+    setEquippedMittTier(null)
+    setRebirthCount((n) => n + 1)
+    setRebirthOpen(false)
+  }
+
   const hasEmptyUnlockedSlot = gridSlots.some((s) => s.unlocked && !s.stove)
+  const sellMultiplier = sellValueMultiplier(rebirthCount, data.rebirth)
   const mittBonus = equippedMittTier ? data.luck.mittRedBonus[equippedMittTier] : 0
   const activeLuckPotion =
     activePotions.luck && activePotions.luck.expiresAt > Date.now() ? activePotions.luck : null
@@ -342,9 +380,20 @@ function App() {
           {potionShopOpen ? 'Close Potion Shop' : 'Open Potion Shop'}
         </button>
         <button onClick={() => setDexOpen(true)}>Dex ({Object.keys(dex).length})</button>
+        <button onClick={() => setRebirthOpen(true)}>Rebirth ({rebirthCount})</button>
       </div>
 
       {dexOpen && <Dex dex={dex} onClose={() => setDexOpen(false)} />}
+
+      {rebirthOpen && (
+        <RebirthPanel
+          rebirthData={data.rebirth}
+          rebirthCount={rebirthCount}
+          cash={cash}
+          onRebirth={doRebirth}
+          onClose={() => setRebirthOpen(false)}
+        />
+      )}
 
       {discoveryPopup && (
         <DiscoveryPopup popup={discoveryPopup} onClose={() => setDiscoveryPopup(null)} />
@@ -395,6 +444,7 @@ function App() {
         wordMap={wordMap}
         wordLists={data.dishWordLists}
         StoveComponent={Stove}
+        sellMultiplier={sellMultiplier}
       />
 
       <div className="inventory">

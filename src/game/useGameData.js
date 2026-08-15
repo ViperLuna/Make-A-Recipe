@@ -13,6 +13,7 @@ const FILES = [
   'luck',
   'mitts',
   'potions',
+  'rebirth',
 ]
 
 // Loads every game-balance JSON file from public/data/ at runtime, so tuning a

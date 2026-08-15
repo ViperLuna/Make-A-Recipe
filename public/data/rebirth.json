@@ -1,0 +1,8 @@
+{
+  "note": "Rebirth wipes cash, inventory, the stove grid, lever mechanism slots, and the equipped mitt back to a fresh game. The Lifetime dex and any active potions survive (potions run on their own wall-clock timer, unaffected by the wipe - see potions.json). Each rebirth permanently increases sell value.",
+  "costFormula": "cost(rebirthCount) = baseCost * costGrowthRate ^ rebirthCount",
+  "baseCost": 500,
+  "costGrowthRate": 1.1,
+  "sellValueBonusPerRebirth": 0.05,
+  "sellValueFormula": "multiplier = 1 + sellValueBonusPerRebirth * rebirthCount"
+}
