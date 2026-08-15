@@ -7,6 +7,7 @@ import { loadState, saveState } from './game/save'
 import { comboKeyOf } from './game/dex'
 import { formatMoney } from './game/format'
 import { rebirthCost, sellValueMultiplier } from './game/rebirth'
+import { computeReadyDish } from './game/dish'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
@@ -26,6 +27,20 @@ const INITIAL_MECHANISM_SLOTS = Array.from({ length: TOTAL_MECHANISM_SLOTS }, (_
 
 // Must match public/data/stove-grid.json's totalSlots.
 const TOTAL_GRID_SLOTS = 10
+
+// Number-row hotkeys 1-9,0 map to grid slots 0-9.
+const DIGIT_TO_SLOT = {
+  Digit1: 0,
+  Digit2: 1,
+  Digit3: 2,
+  Digit4: 3,
+  Digit5: 4,
+  Digit6: 5,
+  Digit7: 6,
+  Digit8: 7,
+  Digit9: 8,
+  Digit0: 9,
+}
 
 const INITIAL_GRID_SLOTS = Array.from({ length: TOTAL_GRID_SLOTS }, (_, i) => ({
   id: i,
@@ -80,6 +95,7 @@ function App() {
   const [discoveryPopup, setDiscoveryPopup] = useState(null)
   const [rebirthCount, setRebirthCount] = useState(0)
   const [rebirthOpen, setRebirthOpen] = useState(false)
+  const [hoveredInventoryIndex, setHoveredInventoryIndex] = useState(null)
 
   // Load any existing save once on startup, before anything can overwrite it.
   useEffect(() => {
@@ -138,6 +154,55 @@ function App() {
     return buildIngredientWordMap(data.ingredients.ingredients.length, data.dishWordLists.descriptors)
   }, [data])
 
+  // If the array shrinks (item added to a stove) while a now-invalid index is
+  // still "hovered", drop it rather than let a stale index linger.
+  useEffect(() => {
+    if (hoveredInventoryIndex !== null && hoveredInventoryIndex >= inventory.length) {
+      setHoveredInventoryIndex(null)
+    }
+  }, [inventory, hoveredInventoryIndex])
+
+  // Number-row hotkeys 1-9,0 act on the matching stove slot: while hovering an
+  // inventory item, they drop that ingredient into the stove; otherwise they
+  // select the stove, or instantly sell it if it's already done cooking. A
+  // missing/locked slot, or an already-selected stove, is a no-op either way.
+  useEffect(() => {
+    if (!data) return
+    function handleKeyDown(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      const slotIndex = DIGIT_TO_SLOT[e.code]
+      if (slotIndex === undefined) return
+      const slot = gridSlots[slotIndex]
+      if (!slot?.unlocked || !slot.stove) return
+
+      if (hoveredInventoryIndex !== null) {
+        addItemToStove(slot.id, hoveredInventoryIndex)
+        return
+      }
+
+      const ready = computeReadyDish(
+        slot.stove,
+        wordMap,
+        data.dishWordLists,
+        sellValueMultiplier(rebirthCount, data.rebirth)
+      )
+      if (ready) {
+        serveStove(slot.id, ready.value, {
+          dishName: ready.dishName,
+          comboEntries: ready.comboEntries,
+          ingredientNames: slot.stove.contents.map((i) => i.name),
+          mutation: slot.stove.mutation,
+        })
+      } else {
+        setSelectedStoveId(slot.id)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, gridSlots, inventory, hoveredInventoryIndex, wordMap, rebirthCount])
+
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
 
@@ -191,15 +256,22 @@ function App() {
     setMechanismSlots((prev) => prev.map((u, i) => (i === index ? true : u)))
   }
 
-  function addToSelectedStove(inventoryIndex) {
-    if (!canAddToSelected) return
+  function addItemToStove(stoveId, inventoryIndex) {
+    const slot = gridSlots.find((s) => s.id === stoveId)
+    if (!slot?.unlocked || !slot.stove) return
+    if (slot.stove.cookCompleteAt) return // cooking or already done - can't add
+    if (slot.stove.contents.length >= slot.stove.maxSlots) return
     const item = inventory[inventoryIndex]
+    if (!item) return
     setInventory((inv) => inv.filter((_, i) => i !== inventoryIndex))
     setGridSlots((prev) =>
-      prev.map((s) =>
-        s.id === selectedStoveId ? { ...s, stove: { ...s.stove, contents: [...s.stove.contents, item] } } : s
-      )
+      prev.map((s) => (s.id === stoveId ? { ...s, stove: { ...s.stove, contents: [...s.stove.contents, item] } } : s))
     )
+  }
+
+  function addToSelectedStove(inventoryIndex) {
+    if (selectedStoveId == null) return
+    addItemToStove(selectedStoveId, inventoryIndex)
   }
 
   function removeFromStove(stoveId, contentIndex) {
@@ -453,7 +525,12 @@ function App() {
         {inventory.length === 0 && <p>Nothing yet - pull the lever and buy something.</p>}
         <ul>
           {inventory.map((item, i) => (
-            <li key={i}>
+            <li
+              key={i}
+              className={hoveredInventoryIndex === i ? 'hovered' : ''}
+              onMouseEnter={() => setHoveredInventoryIndex(i)}
+              onMouseLeave={() => setHoveredInventoryIndex((idx) => (idx === i ? null : idx))}
+            >
               {item.name} ({formatMoney(item.price)})
               {selectedStove && (
                 <button onClick={() => addToSelectedStove(i)} disabled={!canAddToSelected}>
