@@ -286,6 +286,16 @@ button {
   width: 340px;
 }
 
+.rebirth-modal {
+  width: 320px;
+}
+
+.rebirth-modal > button {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
 .dex-list {
   list-style: none;
   padding: 0;

@@ -14,6 +14,7 @@ export default function StoveGrid({
   wordMap,
   wordLists,
   StoveComponent,
+  sellMultiplier = 1,
 }) {
   return (
     <div className="stoves">
@@ -51,6 +52,7 @@ export default function StoveGrid({
             onRemoveStove={onRemoveStove}
             wordMap={wordMap}
             wordLists={wordLists}
+            sellMultiplier={sellMultiplier}
           />
         )
       })}

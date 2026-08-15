@@ -13,6 +13,7 @@ export default function Stove({
   onRemoveStove,
   wordMap,
   wordLists,
+  sellMultiplier = 1,
 }) {
   const [remaining, setRemaining] = useState(null)
   const [confirmingRemoveStove, setConfirmingRemoveStove] = useState(false)
@@ -41,7 +42,7 @@ export default function Stove({
 
   const comboEntries = isDone ? toComboEntries(stove.contents.map((i) => i.index)) : null
   const baseValue = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
-  const value = isDone ? baseValue * (stove.mutation?.priceMultiplier ?? 1) : null
+  const value = isDone ? baseValue * (stove.mutation?.priceMultiplier ?? 1) * sellMultiplier : null
   const dishName = isDone ? nameDish(comboEntries, wordMap, wordLists) : null
 
   return (
