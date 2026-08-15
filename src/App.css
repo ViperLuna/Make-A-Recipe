@@ -90,6 +90,11 @@
   padding: 0.1rem 0.4rem;
 }
 
+.dish-name {
+  font-weight: bold;
+  font-style: italic;
+}
+
 .stove-contents .empty-slot {
   color: #666;
   font-style: italic;

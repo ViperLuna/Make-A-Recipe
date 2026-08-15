@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react'
 import { comboValue } from '../game/economy'
+import { nameDish, toComboEntries } from '../game/naming'
 
-export default function Stove({ stove, selected, onSelect, onStartCooking, onServe, onRemove }) {
+export default function Stove({
+  stove,
+  selected,
+  onSelect,
+  onStartCooking,
+  onServe,
+  onRemove,
+  wordMap,
+  wordLists,
+}) {
   const [remaining, setRemaining] = useState(null)
 
   useEffect(() => {
@@ -22,6 +32,9 @@ export default function Stove({ stove, selected, onSelect, onStartCooking, onSer
   const canStart = isEditable && stove.contents.length > 0
 
   const value = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
+  const dishName = isDone
+    ? nameDish(toComboEntries(stove.contents.map((i) => i.index)), wordMap, wordLists)
+    : null
 
   return (
     <div
@@ -72,6 +85,7 @@ export default function Stove({ stove, selected, onSelect, onStartCooking, onSer
 
       {isDone && (
         <div>
+          <p className="dish-name">{dishName}</p>
           <p>Ready! Sell for ${value.toFixed(2)}</p>
           <button
             onClick={(e) => {

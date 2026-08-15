@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useGameData } from './game/useGameData'
 import { totalCookSeconds } from './game/economy'
+import { buildIngredientWordMap } from './game/naming'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import './App.css'
@@ -25,6 +26,12 @@ function App() {
   const [inventory, setInventory] = useState([])
   const [stoves, setStoves] = useState(INITIAL_STOVES)
   const [selectedStoveId, setSelectedStoveId] = useState(null)
+
+  // Built once: each ingredient's permanent naming word, from the deterministic seed.
+  const wordMap = useMemo(() => {
+    if (!data) return null
+    return buildIngredientWordMap(data.ingredients.ingredients.length, data.dishWordLists.descriptors)
+  }, [data])
 
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data) return <p>Loading...</p>
@@ -106,6 +113,8 @@ function App() {
             onStartCooking={startCooking}
             onServe={serveStove}
             onRemove={removeFromStove}
+            wordMap={wordMap}
+            wordLists={data.dishWordLists}
           />
         ))}
       </div>
