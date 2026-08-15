@@ -1,4 +1,13 @@
 {
+  "basePullChance": {
+    "note": "Base ingredient-tier odds per lever pull, before mitt/potion luck bonuses (see luck.json, which shifts these proportionally toward red).",
+    "white": 0.55,
+    "green": 0.25,
+    "blue": 0.12,
+    "purple": 0.05,
+    "orange": 0.02,
+    "red": 0.01
+  },
   "mechanismSlots": {
     "note": "Each slot spins independently and simultaneously on every lever pull. Room to extend past 3 later (up to 5-6).",
     "slot1": { "cost": 0, "note": "free, starting slot" },
