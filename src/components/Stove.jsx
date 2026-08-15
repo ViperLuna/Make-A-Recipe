@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { comboValue } from '../game/economy'
 import { nameDish, toComboEntries } from '../game/naming'
+import { formatMoney } from '../game/format'
 
 export default function Stove({
   stove,
@@ -98,7 +99,7 @@ export default function Stove({
             </p>
           )}
           <p className="dish-name">{dishName}</p>
-          <p>Ready! Sell for ${value.toFixed(2)}</p>
+          <p>Ready! Sell for {formatMoney(value)}</p>
           <button
             onClick={(e) => {
               e.stopPropagation()

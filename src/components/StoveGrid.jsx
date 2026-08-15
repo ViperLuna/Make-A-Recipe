@@ -1,3 +1,5 @@
+import { formatMoney } from '../game/format'
+
 export default function StoveGrid({
   gridSlots,
   stoveGridData,
@@ -22,7 +24,7 @@ export default function StoveGrid({
             <div key={slot.id} className="stove-card locked">
               <h3>Locked</h3>
               <button onClick={() => onUnlock(slot.id)} disabled={cash < cost}>
-                Unlock for ${cost.toLocaleString()}
+                Unlock for {formatMoney(cost)}
               </button>
             </div>
           )

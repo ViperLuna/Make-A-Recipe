@@ -5,6 +5,7 @@ import { buildIngredientWordMap } from './game/naming'
 import { rollMutation } from './game/mutations'
 import { loadState, saveState } from './game/save'
 import { comboKeyOf } from './game/dex'
+import { formatMoney } from './game/format'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
@@ -298,7 +299,7 @@ function App() {
   return (
     <div className="game">
       <h1>Make A Recipe</h1>
-      <p className="cash">${cash.toFixed(2)}</p>
+      <p className="cash">{formatMoney(cash)}</p>
 
       <Lever
         ingredientsData={data.ingredients}
@@ -314,7 +315,7 @@ function App() {
             mechanismSlots[i] &&
             result && (
               <button key={i} onClick={() => buyPulledAt(i)} disabled={cash < result.price}>
-                Buy {result.name} for ${result.price}
+                Buy {result.name} for {formatMoney(result.price)}
               </button>
             )
         )}
@@ -324,7 +325,7 @@ function App() {
           const cost = data.lever.mechanismSlots[`slot${nextIndex + 1}`]?.cost ?? 0
           return (
             <button onClick={() => unlockMechanism(nextIndex)} disabled={cash < cost}>
-              Unlock lever mechanism {nextIndex + 1} for ${cost.toLocaleString()}
+              Unlock lever mechanism {nextIndex + 1} for {formatMoney(cost)}
             </button>
           )
         })()}
@@ -403,7 +404,7 @@ function App() {
         <ul>
           {inventory.map((item, i) => (
             <li key={i}>
-              {item.name} (${item.price})
+              {item.name} ({formatMoney(item.price)})
               {selectedStove && (
                 <button onClick={() => addToSelectedStove(i)} disabled={!canAddToSelected}>
                   Add
