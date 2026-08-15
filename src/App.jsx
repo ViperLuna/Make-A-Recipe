@@ -408,7 +408,12 @@ function App() {
 
   return (
     <div className="game">
-      <img src={`${import.meta.env.BASE_URL}logo.webp`} alt="Make A Recipe" className="logo" />
+      <img
+        src={`${import.meta.env.BASE_URL}logo.webp`}
+        alt="Make A Recipe"
+        className="logo"
+        draggable="false"
+      />
       <p className="cash">{formatMoney(cash)}</p>
 
       <Lever
