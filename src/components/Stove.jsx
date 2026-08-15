@@ -38,11 +38,10 @@ export default function Stove({
     if (!selected) setConfirmingRemoveStove(false)
   }, [selected])
 
+  const comboEntries = isDone ? toComboEntries(stove.contents.map((i) => i.index)) : null
   const baseValue = isDone ? comboValue(stove.contents.map((i) => i.price)) : null
   const value = isDone ? baseValue * (stove.mutation?.priceMultiplier ?? 1) : null
-  const dishName = isDone
-    ? nameDish(toComboEntries(stove.contents.map((i) => i.index)), wordMap, wordLists)
-    : null
+  const dishName = isDone ? nameDish(comboEntries, wordMap, wordLists) : null
 
   return (
     <div
@@ -103,7 +102,12 @@ export default function Stove({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onServe(stove.id, value)
+              onServe(stove.id, value, {
+                dishName,
+                comboEntries,
+                ingredientNames: stove.contents.map((i) => i.name),
+                mutation: stove.mutation,
+              })
             }}
           >
             Serve & Sell

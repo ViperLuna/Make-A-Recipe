@@ -234,3 +234,88 @@
 button {
   cursor: pointer;
 }
+
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal {
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1rem;
+  max-width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.dex-modal {
+  width: 340px;
+}
+
+.dex-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dex-list li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.dex-name {
+  display: block;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.dex-ingredients {
+  display: block;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.dex-mutations {
+  display: block;
+  font-size: 0.75rem;
+  color: #f5923e;
+  text-transform: uppercase;
+}
+
+.discovery-popup {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  border: 2px solid #f5923e;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  z-index: 200;
+  max-width: 90vw;
+}
