@@ -6,30 +6,57 @@ import { rollMutation } from './game/mutations'
 import { loadState, saveState } from './game/save'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
+import StoveGrid from './components/StoveGrid'
+import StoveShop from './components/StoveShop'
 import './App.css'
 
 const STARTING_CASH = 25
 
-const INITIAL_STOVES = [
-  {
-    id: 0,
-    name: 'Basic Stove',
-    tier: 'white',
-    maxSlots: 1,
-    contents: [],
-    cookCompleteAt: null,
-    mutation: null,
-  },
-]
+// Must match public/data/stove-grid.json's totalSlots.
+const TOTAL_GRID_SLOTS = 10
+
+const INITIAL_GRID_SLOTS = Array.from({ length: TOTAL_GRID_SLOTS }, (_, i) => ({
+  id: i,
+  unlocked: i === 0,
+  stove:
+    i === 0
+      ? { name: 'Basic Stove', tier: 'white', maxSlots: 1, contents: [], cookCompleteAt: null, mutation: null }
+      : null,
+}))
+
+// Pre-grid saves stored a flat `stoves` array instead of `gridSlots`. Convert
+// old saves forward so existing progress (cash, cooking state, etc.) survives
+// this schema change instead of crashing on load.
+function migrateOldStoves(oldStoves) {
+  const slots = Array.from({ length: TOTAL_GRID_SLOTS }, (_, i) => ({ id: i, unlocked: false, stove: null }))
+  for (const s of oldStoves) {
+    if (s.id < TOTAL_GRID_SLOTS) {
+      slots[s.id] = {
+        id: s.id,
+        unlocked: true,
+        stove: {
+          name: s.name,
+          tier: s.tier,
+          maxSlots: s.maxSlots,
+          contents: s.contents,
+          cookCompleteAt: s.cookCompleteAt,
+          mutation: s.mutation ?? null,
+        },
+      }
+    }
+  }
+  return slots
+}
 
 function App() {
   const { data, error } = useGameData()
   const [cash, setCash] = useState(STARTING_CASH)
   const [pulled, setPulled] = useState(null)
   const [inventory, setInventory] = useState([])
-  const [stoves, setStoves] = useState(INITIAL_STOVES)
+  const [gridSlots, setGridSlots] = useState(INITIAL_GRID_SLOTS)
   const [selectedStoveId, setSelectedStoveId] = useState(null)
   const [saveLoaded, setSaveLoaded] = useState(false)
+  const [shopOpen, setShopOpen] = useState(false)
 
   // Load any existing save once on startup, before anything can overwrite it.
   useEffect(() => {
@@ -38,7 +65,7 @@ function App() {
         if (saved) {
           setCash(saved.cash)
           setInventory(saved.inventory)
-          setStoves(saved.stoves)
+          setGridSlots(saved.gridSlots ?? migrateOldStoves(saved.stoves ?? []))
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -48,8 +75,8 @@ function App() {
   // (guards against saving the default state over a real save on first render).
   useEffect(() => {
     if (!saveLoaded) return
-    saveState({ cash, inventory, stoves })
-  }, [saveLoaded, cash, inventory, stoves])
+    saveState({ cash, inventory, gridSlots })
+  }, [saveLoaded, cash, inventory, gridSlots])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
   const wordMap = useMemo(() => {
@@ -60,7 +87,8 @@ function App() {
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
 
-  const selectedStove = stoves.find((s) => s.id === selectedStoveId) ?? null
+  const occupiedSlot = gridSlots.find((s) => s.id === selectedStoveId && s.stove) ?? null
+  const selectedStove = occupiedSlot?.stove ?? null
   const canAddToSelected =
     selectedStove && !selectedStove.cookCompleteAt && selectedStove.contents.length < selectedStove.maxSlots
 
@@ -75,48 +103,84 @@ function App() {
     if (!canAddToSelected) return
     const item = inventory[inventoryIndex]
     setInventory((inv) => inv.filter((_, i) => i !== inventoryIndex))
-    setStoves((prev) =>
-      prev.map((s) => (s.id === selectedStoveId ? { ...s, contents: [...s.contents, item] } : s))
+    setGridSlots((prev) =>
+      prev.map((s) =>
+        s.id === selectedStoveId ? { ...s, stove: { ...s.stove, contents: [...s.stove.contents, item] } } : s
+      )
     )
   }
 
   function removeFromStove(stoveId, contentIndex) {
-    const stove = stoves.find((s) => s.id === stoveId)
-    if (!stove || stove.cookCompleteAt) return
-    const item = stove.contents[contentIndex]
+    const slot = gridSlots.find((s) => s.id === stoveId)
+    if (!slot?.stove || slot.stove.cookCompleteAt) return
+    const item = slot.stove.contents[contentIndex]
     setInventory((inv) => [...inv, item])
-    setStoves((prev) =>
+    setGridSlots((prev) =>
       prev.map((s) =>
-        s.id === stoveId ? { ...s, contents: s.contents.filter((_, i) => i !== contentIndex) } : s
+        s.id === stoveId
+          ? { ...s, stove: { ...s.stove, contents: s.stove.contents.filter((_, i) => i !== contentIndex) } }
+          : s
       )
     )
   }
 
   function startCooking(stoveId) {
-    setStoves((prev) =>
+    setGridSlots((prev) =>
       prev.map((s) => {
-        if (s.id !== stoveId || s.contents.length === 0 || s.cookCompleteAt) return s
+        if (s.id !== stoveId || !s.stove || s.stove.contents.length === 0 || s.stove.cookCompleteAt) return s
         const seconds = totalCookSeconds(
-          s.contents.map((i) => i.tier),
-          s.tier
+          s.stove.contents.map((i) => i.tier),
+          s.stove.tier
         )
-        // Mutation is decided the moment cooking starts, not at serve time - so it's
-        // fixed and ready to reveal the instant the dish finishes, same "predetermined
-        // before reveal" rule the lever spinner already follows.
         const mutation = rollMutation(data.mutationOdds, data.mutations)
-        return { ...s, cookCompleteAt: Date.now() + seconds * 1000, mutation }
+        return { ...s, stove: { ...s.stove, cookCompleteAt: Date.now() + seconds * 1000, mutation } }
       })
     )
   }
 
   function serveStove(stoveId, value) {
     setCash((c) => c + value)
-    setStoves((prev) =>
+    setGridSlots((prev) =>
       prev.map((s) =>
-        s.id === stoveId ? { ...s, contents: [], cookCompleteAt: null, mutation: null } : s
+        s.id === stoveId
+          ? { ...s, stove: { ...s.stove, contents: [], cookCompleteAt: null, mutation: null } }
+          : s
       )
     )
   }
+
+  function unlockSlot(slotId) {
+    const cost = data.stoveGrid.slots[slotId]?.cost
+    if (cost == null || cash < cost) return
+    setCash((c) => c - cost)
+    setGridSlots((prev) => prev.map((s) => (s.id === slotId ? { ...s, unlocked: true } : s)))
+  }
+
+  function buyStove(stoveDef) {
+    if (cash < stoveDef.price) return
+    const target = gridSlots.find((s) => s.unlocked && !s.stove)
+    if (!target) return
+    setCash((c) => c - stoveDef.price)
+    setGridSlots((prev) =>
+      prev.map((s) =>
+        s.id === target.id
+          ? {
+              ...s,
+              stove: {
+                name: stoveDef.name,
+                tier: stoveDef.tier,
+                maxSlots: stoveDef.slotCount,
+                contents: [],
+                cookCompleteAt: null,
+                mutation: null,
+              },
+            }
+          : s
+      )
+    )
+  }
+
+  const hasEmptyUnlockedSlot = gridSlots.some((s) => s.unlocked && !s.stove)
 
   return (
     <div className="game">
@@ -133,21 +197,34 @@ function App() {
         </div>
       )}
 
-      <div className="stoves">
-        {stoves.map((stove) => (
-          <Stove
-            key={stove.id}
-            stove={stove}
-            selected={stove.id === selectedStoveId}
-            onSelect={setSelectedStoveId}
-            onStartCooking={startCooking}
-            onServe={serveStove}
-            onRemove={removeFromStove}
-            wordMap={wordMap}
-            wordLists={data.dishWordLists}
-          />
-        ))}
-      </div>
+      <button className="shop-toggle" onClick={() => setShopOpen((o) => !o)}>
+        {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
+      </button>
+
+      {shopOpen && (
+        <StoveShop
+          shopData={data.stoveShop}
+          stovesData={data.stoves}
+          cash={cash}
+          hasEmptyUnlockedSlot={hasEmptyUnlockedSlot}
+          onBuy={buyStove}
+        />
+      )}
+
+      <StoveGrid
+        gridSlots={gridSlots}
+        stoveGridData={data.stoveGrid}
+        cash={cash}
+        selectedStoveId={selectedStoveId}
+        onSelect={setSelectedStoveId}
+        onUnlock={unlockSlot}
+        onStartCooking={startCooking}
+        onServe={serveStove}
+        onRemove={removeFromStove}
+        wordMap={wordMap}
+        wordLists={data.dishWordLists}
+        StoveComponent={Stove}
+      />
 
       <div className="inventory">
         <h3>Inventory</h3>
