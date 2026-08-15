@@ -30,6 +30,11 @@ export default function Lever({ ingredientsData, leverData, onResult }) {
       if (elapsed >= totalMs) {
         setDisplay(realResult)
         setSpinning(false)
+        // Deliberately only fires when the spin actually finishes: if the player
+        // pulls again before buying the current result, that old result (and its
+        // Buy button) stays live for the full duration of the new spin, giving
+        // them a window to still buy it before this call overwrites it. Keep
+        // this - it's an intentional kept "glitch," not a bug to fix.
         onResult(realResult)
         return
       }
