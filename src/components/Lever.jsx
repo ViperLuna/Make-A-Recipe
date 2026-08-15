@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { pullIngredient } from '../game/economy'
 
 const TIER_COLORS = {
@@ -41,6 +41,18 @@ export default function Lever({ ingredientsData, leverData, onResult }) {
     }
     tick()
   }
+
+  // Spacebar pulls the lever too, matching the button.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.code === 'Space') {
+        e.preventDefault()
+        pull()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [spinning])
 
   return (
     <div className="lever">

@@ -95,6 +95,14 @@
   font-style: italic;
 }
 
+.mutation-tag {
+  font-weight: bold;
+  color: #f5923e;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  margin: 0 0 0.25rem;
+}
+
 .stove-contents .empty-slot {
   color: #666;
   font-style: italic;
