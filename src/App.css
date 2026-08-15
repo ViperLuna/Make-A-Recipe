@@ -140,6 +140,30 @@
   font-style: italic;
 }
 
+.remove-stove-section {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #444;
+}
+
+.remove-stove-btn {
+  color: #f53e3e;
+  border-color: #f53e3e;
+}
+
+.confirm-text {
+  font-size: 0.65rem;
+  color: #f53e3e;
+  margin: 0 0 0.2rem;
+}
+
+.confirm-remove-btn {
+  background: #f53e3e;
+  color: #fff;
+  border-color: #f53e3e;
+  margin-bottom: 0.2rem;
+}
+
 .hint {
   color: #999;
   font-size: 0.9rem;

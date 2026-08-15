@@ -170,6 +170,16 @@ function App() {
     )
   }
 
+  function removeStove(stoveId) {
+    const slot = gridSlots.find((s) => s.id === stoveId)
+    if (!slot?.stove || slot.stove.cookCompleteAt) return
+    if (slot.stove.contents.length > 0) {
+      setInventory((inv) => [...inv, ...slot.stove.contents])
+    }
+    setGridSlots((prev) => prev.map((s) => (s.id === stoveId ? { ...s, stove: null } : s)))
+    setSelectedStoveId((id) => (id === stoveId ? null : id))
+  }
+
   function unlockSlot(slotId) {
     const cost = data.stoveGrid.slots[slotId]?.cost
     if (cost == null || cash < cost) return
@@ -261,6 +271,7 @@ function App() {
         onStartCooking={startCooking}
         onServe={serveStove}
         onRemove={removeFromStove}
+        onRemoveStove={removeStove}
         wordMap={wordMap}
         wordLists={data.dishWordLists}
         StoveComponent={Stove}
