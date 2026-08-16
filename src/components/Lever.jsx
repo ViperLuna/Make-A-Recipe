@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { pullIngredient } from '../game/economy'
 
 const TIER_COLORS = {
@@ -55,12 +55,25 @@ function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, onResult })
 export default function Lever({ ingredientsData, leverData, mechanismCount, redBonus = 0, onResult }) {
   const [trigger, setTrigger] = useState(0)
   const [spinning, setSpinning] = useState(false)
+  // Counts real results in for the in-flight trigger, so "spinning" clears
+  // only once every box has actually reported - not on a guessed timer. A
+  // second independent timer here used to drift out of sync with each
+  // SpinnerBox's own animation (which can overshoot by up to its slowest
+  // flicker interval), letting a held-down pull sneak in and cancel the
+  // in-flight result before it ever reported.
+  const resultsInRef = useRef(0)
 
   function pull() {
     if (spinning) return
     setSpinning(true)
+    resultsInRef.current = 0
     setTrigger((t) => t + 1)
-    setTimeout(() => setSpinning(false), leverData.spinAnimation.baseDurationSeconds * 1000)
+  }
+
+  function handleBoxResult(i, result) {
+    onResult(i, result)
+    resultsInRef.current += 1
+    if (resultsInRef.current >= mechanismCount) setSpinning(false)
   }
 
   // Spacebar pulls the lever too, matching the button.
@@ -86,7 +99,7 @@ export default function Lever({ ingredientsData, leverData, mechanismCount, redB
             leverData={leverData}
             redBonus={redBonus}
             trigger={trigger}
-            onResult={(result) => onResult(i, result)}
+            onResult={(result) => handleBoxResult(i, result)}
           />
         ))}
       </div>
