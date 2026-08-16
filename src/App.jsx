@@ -17,6 +17,7 @@ import PotionShop from './components/PotionShop'
 import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
 import RebirthPanel from './components/RebirthPanel'
+import ActivePotions from './components/ActivePotions'
 import './App.css'
 
 const STARTING_CASH = 25
@@ -235,19 +236,25 @@ function App() {
   function buyLuckPotion(potion) {
     if (cash < potion.price) return
     setCash((c) => c - potion.price)
-    setActivePotions((prev) => ({
-      ...prev,
-      luck: { rank: potion.rank, expiresAt: Date.now() + potion.durationMinutes * 60000 },
-    }))
+    setActivePotions((prev) => {
+      const remainingMs = prev.luck && prev.luck.expiresAt > Date.now() ? prev.luck.expiresAt - Date.now() : 0
+      return {
+        ...prev,
+        luck: { rank: potion.rank, expiresAt: Date.now() + potion.durationMinutes * 60000 + remainingMs },
+      }
+    })
   }
 
   function buySpeedPotion(potion) {
     if (cash < potion.price) return
     setCash((c) => c - potion.price)
-    setActivePotions((prev) => ({
-      ...prev,
-      speed: { rank: potion.rank, expiresAt: Date.now() + potion.durationMinutes * 60000 },
-    }))
+    setActivePotions((prev) => {
+      const remainingMs = prev.speed && prev.speed.expiresAt > Date.now() ? prev.speed.expiresAt - Date.now() : 0
+      return {
+        ...prev,
+        speed: { rank: potion.rank, expiresAt: Date.now() + potion.durationMinutes * 60000 + remainingMs },
+      }
+    })
   }
 
   function unlockMechanism(index) {
@@ -425,6 +432,7 @@ function App() {
         draggable="false"
       />
       <p className="cash">{formatMoney(cash)}</p>
+      <ActivePotions activePotions={activePotions} potionsData={data.potions} />
 
       <Lever
         ingredientsData={data.ingredients}
