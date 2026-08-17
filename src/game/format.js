@@ -22,3 +22,14 @@ export function formatMoney(n) {
   }
   return `$${n.toFixed(2)}`
 }
+
+// Same short-scale suffixes as formatMoney, but for plain counts (no $, no
+// forced decimals below 1000).
+export function formatNumber(n) {
+  const abs = Math.abs(n)
+  if (abs < 1000) return `${n}`
+  for (const { value, suffix } of SUFFIXES) {
+    if (abs >= value) return `${(n / value).toFixed(2)}${suffix}`
+  }
+  return `${n}`
+}
