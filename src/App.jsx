@@ -43,6 +43,13 @@ const DIGIT_TO_SLOT = {
   Digit0: 9,
 }
 
+// Q, W, E buy the pulled ingredient from lever mechanism slots 0-2, left to right.
+const LEVER_KEY_TO_SLOT = {
+  KeyQ: 0,
+  KeyW: 1,
+  KeyE: 2,
+}
+
 const INITIAL_GRID_SLOTS = Array.from({ length: TOTAL_GRID_SLOTS }, (_, i) => ({
   id: i,
   unlocked: i === 0,
@@ -213,6 +220,21 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, gridSlots, inventory, hoveredInventoryIndex, wordMap, rebirthCount, activePotions, dex])
+
+  // Q, W, E buy the pulled ingredient from lever mechanism slots 0-2, left to
+  // right - same effect as clicking that reel's own Buy button.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      const slotIndex = LEVER_KEY_TO_SLOT[e.code]
+      if (slotIndex === undefined) return
+      buyPulledAt(slotIndex)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pulledResults, cash])
 
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
