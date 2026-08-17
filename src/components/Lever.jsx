@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { pullIngredient } from '../game/economy'
+import { formatMoney } from '../game/format'
 
 const TIER_COLORS = {
   white: '#e8e8e8',
@@ -52,7 +53,16 @@ function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, onResult })
   )
 }
 
-export default function Lever({ ingredientsData, leverData, mechanismCount, redBonus = 0, onResult }) {
+export default function Lever({
+  ingredientsData,
+  leverData,
+  mechanismCount,
+  redBonus = 0,
+  onResult,
+  pulledResults,
+  cash,
+  onBuy,
+}) {
   const [trigger, setTrigger] = useState(0)
   const [spinning, setSpinning] = useState(false)
   // Counts real results in for the in-flight trigger, so "spinning" clears
@@ -93,14 +103,22 @@ export default function Lever({ ingredientsData, leverData, mechanismCount, redB
     <div className="lever">
       <div className="lever-boxes">
         {Array.from({ length: mechanismCount }).map((_, i) => (
-          <SpinnerBox
-            key={i}
-            ingredientsData={ingredientsData}
-            leverData={leverData}
-            redBonus={redBonus}
-            trigger={trigger}
-            onResult={(result) => handleBoxResult(i, result)}
-          />
+          <div className="lever-slot" key={i}>
+            <SpinnerBox
+              ingredientsData={ingredientsData}
+              leverData={leverData}
+              redBonus={redBonus}
+              trigger={trigger}
+              onResult={(result) => handleBoxResult(i, result)}
+            />
+            <div className="lever-buy-slot">
+              {pulledResults[i] && (
+                <button onClick={() => onBuy(i)} disabled={cash < pulledResults[i].price}>
+                  Buy for {formatMoney(pulledResults[i].price)}
+                </button>
+              )}
+            </div>
+          </div>
         ))}
       </div>
       <button onClick={pull} disabled={spinning}>

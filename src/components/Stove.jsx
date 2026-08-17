@@ -98,8 +98,6 @@ export default function Stove({
               {stove.mutation.name} ({stove.mutation.priceMultiplier}x)
             </p>
           )}
-          <p className="dish-name">{dishName}</p>
-          <p>Ready! Sell for {formatMoney(value)}</p>
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -111,7 +109,7 @@ export default function Stove({
               })
             }}
           >
-            Serve & Sell
+            Sell for {formatMoney(value)}
           </button>
         </div>
       )}

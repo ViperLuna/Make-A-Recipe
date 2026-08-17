@@ -440,18 +440,12 @@ function App() {
         mechanismCount={mechanismSlots.filter(Boolean).length}
         redBonus={redBonus}
         onResult={handlePullResult}
+        pulledResults={pulledResults}
+        cash={cash}
+        onBuy={buyPulledAt}
       />
 
       <div className="pulled-actions">
-        {pulledResults.map(
-          (result, i) =>
-            mechanismSlots[i] &&
-            result && (
-              <button key={i} onClick={() => buyPulledAt(i)} disabled={cash < result.price}>
-                Buy {result.name} for {formatMoney(result.price)}
-              </button>
-            )
-        )}
         {(() => {
           const nextIndex = mechanismSlots.filter(Boolean).length
           if (nextIndex >= TOTAL_MECHANISM_SLOTS) return null
