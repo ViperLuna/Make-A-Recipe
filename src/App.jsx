@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useGameData } from './game/useGameData'
-import { totalCookSeconds } from './game/economy'
+import { totalCookSeconds, TIER_INDEX } from './game/economy'
 import { buildIngredientWordMap } from './game/naming'
 import { rollMutation } from './game/mutations'
 import { loadState, saveState } from './game/save'
@@ -363,7 +363,8 @@ function App() {
   }
 
   function buyMitt(mitt) {
-    if (cash < mitt.price || mitt.tier === equippedMittTier) return
+    const isDowngrade = equippedMittTier != null && TIER_INDEX[mitt.tier] < TIER_INDEX[equippedMittTier]
+    if (cash < mitt.price || mitt.tier === equippedMittTier || isDowngrade) return
     setCash((c) => c - mitt.price)
     setEquippedMittTier(mitt.tier)
   }

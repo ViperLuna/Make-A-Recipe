@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getMittShopStock } from '../game/shop'
+import { TIER_INDEX } from '../game/economy'
 import { formatMoney } from '../game/format'
 
 const TIER_COLORS = {
@@ -31,22 +32,23 @@ export default function MittShop({ mittsData, shopData, luckData, cash, equipped
         </p>
       )}
       <ul className="shop-stock">
-        {stock.map((mitt) => (
-          <li key={mitt.tier} style={{ borderColor: TIER_COLORS[mitt.tier] }}>
-            <span className="shop-item-name" style={{ color: TIER_COLORS[mitt.tier] }}>
-              {mitt.name.toUpperCase()}
-            </span>
-            <span className="shop-item-detail">
-              {formatMoney(mitt.price)} - +{(luckData.mittRedBonus[mitt.tier] * 100).toFixed(0)}% red chance
-            </span>
-            <button
-              onClick={() => onEquip(mitt)}
-              disabled={cash < mitt.price || mitt.tier === equippedMittTier}
-            >
-              {mitt.tier === equippedMittTier ? 'Equipped' : 'Buy & Equip'}
-            </button>
-          </li>
-        ))}
+        {stock.map((mitt) => {
+          const isEquipped = mitt.tier === equippedMittTier
+          const isDowngrade = equippedMittTier != null && TIER_INDEX[mitt.tier] < TIER_INDEX[equippedMittTier]
+          return (
+            <li key={mitt.tier} style={{ borderColor: TIER_COLORS[mitt.tier] }}>
+              <span className="shop-item-name" style={{ color: TIER_COLORS[mitt.tier] }}>
+                {mitt.name.toUpperCase()}
+              </span>
+              <span className="shop-item-detail">
+                {formatMoney(mitt.price)} - +{(luckData.mittRedBonus[mitt.tier] * 100).toFixed(0)}% red chance
+              </span>
+              <button onClick={() => onEquip(mitt)} disabled={cash < mitt.price || isEquipped || isDowngrade}>
+                {isEquipped ? 'Equipped' : isDowngrade ? 'Downgrade' : 'Buy & Equip'}
+              </button>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )
