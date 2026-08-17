@@ -18,9 +18,15 @@ import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
 import RebirthPanel from './components/RebirthPanel'
 import ActivePotions from './components/ActivePotions'
+import Inventory from './components/Inventory'
 import './App.css'
 
 const STARTING_CASH = 25
+
+// Keeps the inventory list well within where an unvirtualized render would
+// start to feel sluggish on weaker devices, while staying generous enough
+// never to interrupt a mass-buy-then-mass-cook session.
+const MAX_INVENTORY = 10000
 
 // Must match public/data/lever.json's mechanismSlots keys (slot1..slot3).
 const TOTAL_MECHANISM_SLOTS = 3
@@ -286,23 +292,25 @@ function App() {
 
   function buyPulledAt(index) {
     const item = pulledResults[index]
-    if (!item || cash < item.price) return
+    if (!item || cash < item.price || inventory.length >= MAX_INVENTORY) return
     setCash((c) => c - item.price)
     setInventory((inv) => [...inv, item])
     setPulledResults((prev) => prev.map((r, i) => (i === index ? null : r)))
   }
 
   // Buys every affordable pulled result in one go. Runs its own affordability
-  // check against a running total rather than calling buyPulledAt per slot,
-  // since three back-to-back calls would each check against the same
-  // not-yet-updated cash and could let you buy more than you can afford.
+  // (and inventory-space) check against running totals rather than calling
+  // buyPulledAt per slot, since three back-to-back calls would each check
+  // against the same not-yet-updated cash/inventory and could overshoot both.
   function buyAllPulled() {
     let remainingCash = cash
+    let remainingSpace = MAX_INVENTORY - inventory.length
     const boughtIndices = []
     const boughtItems = []
     pulledResults.forEach((item, i) => {
-      if (item && remainingCash >= item.price) {
+      if (item && remainingCash >= item.price && remainingSpace > 0) {
         remainingCash -= item.price
+        remainingSpace -= 1
         boughtIndices.push(i)
         boughtItems.push(item)
       }
@@ -529,6 +537,7 @@ function App() {
         pulledResults={pulledResults}
         cash={cash}
         onBuy={buyPulledAt}
+        inventoryFull={inventory.length >= MAX_INVENTORY}
       />
 
       <div className="pulled-actions">
@@ -624,28 +633,15 @@ function App() {
         sellMultiplier={sellMultiplier}
       />
 
-      <div className="inventory">
-        <h3>Inventory</h3>
-        {!selectedStove && <p className="hint">Select a stove above to add ingredients to it.</p>}
-        {inventory.length === 0 && <p>Nothing yet - pull the lever and buy something.</p>}
-        <ul>
-          {inventory.map((item, i) => (
-            <li
-              key={i}
-              className={hoveredInventoryIndex === i ? 'hovered' : ''}
-              onMouseEnter={() => setHoveredInventoryIndex(i)}
-              onMouseLeave={() => setHoveredInventoryIndex((idx) => (idx === i ? null : idx))}
-            >
-              {item.name} ({formatMoney(item.price)})
-              {selectedStove && (
-                <button onClick={() => addToSelectedStove(i)} disabled={!canAddToSelected}>
-                  Add
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <Inventory
+        inventory={inventory}
+        maxInventory={MAX_INVENTORY}
+        selectedStove={selectedStove}
+        canAddToSelected={canAddToSelected}
+        hoveredInventoryIndex={hoveredInventoryIndex}
+        onHoverIndex={setHoveredInventoryIndex}
+        onAdd={addToSelectedStove}
+      />
     </div>
   )
 }

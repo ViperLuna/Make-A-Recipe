@@ -24,7 +24,7 @@ export default function Dex({ dex, totalPossible, onClose }) {
         {entries.length === 0 && <p className="hint">Nothing discovered yet - go cook something.</p>}
 
         {totalPages > 1 && (
-          <div className="dex-pager">
+          <div className="pager">
             <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
               Prev
             </button>

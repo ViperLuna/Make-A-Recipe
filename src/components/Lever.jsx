@@ -62,6 +62,7 @@ export default function Lever({
   pulledResults,
   cash,
   onBuy,
+  inventoryFull = false,
 }) {
   const [trigger, setTrigger] = useState(0)
   const [spinning, setSpinning] = useState(false)
@@ -113,8 +114,8 @@ export default function Lever({
             />
             <div className="lever-buy-slot">
               {pulledResults[i] && (
-                <button onClick={() => onBuy(i)} disabled={cash < pulledResults[i].price}>
-                  Buy for {formatMoney(pulledResults[i].price)}
+                <button onClick={() => onBuy(i)} disabled={cash < pulledResults[i].price || inventoryFull}>
+                  {inventoryFull ? 'Inventory full' : `Buy for ${formatMoney(pulledResults[i].price)}`}
                 </button>
               )}
             </div>
