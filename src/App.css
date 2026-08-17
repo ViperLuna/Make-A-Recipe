@@ -33,6 +33,13 @@
   padding: 0.15rem 0.4rem;
 }
 
+.rebirth-quick-btn {
+  display: block;
+  margin: 0 auto 0.75rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+}
+
 .lever {
   display: flex;
   flex-direction: column;

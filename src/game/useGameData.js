@@ -14,6 +14,7 @@ const FILES = [
   'mitts',
   'potions',
   'rebirth',
+  'bulk-crates',
 ]
 
 // Loads every game-balance JSON file from public/data/ at runtime, so tuning a

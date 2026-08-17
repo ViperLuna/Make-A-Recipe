@@ -8,12 +8,14 @@ import { comboKeyOf, totalPossibleCombos } from './game/dex'
 import { formatMoney } from './game/format'
 import { rebirthCost, sellValueMultiplier } from './game/rebirth'
 import { computeReadyDish } from './game/dish'
+import { rollCrate } from './game/bulkCrate'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
 import StoveShop from './components/StoveShop'
 import MittShop from './components/MittShop'
 import PotionShop from './components/PotionShop'
+import BulkCratePanel from './components/BulkCratePanel'
 import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
 import RebirthPanel from './components/RebirthPanel'
@@ -109,6 +111,7 @@ function App() {
   const [discoveryPopup, setDiscoveryPopup] = useState(null)
   const [rebirthCount, setRebirthCount] = useState(0)
   const [rebirthOpen, setRebirthOpen] = useState(false)
+  const [bulkCrateOpen, setBulkCrateOpen] = useState(false)
   const [hoveredInventoryIndex, setHoveredInventoryIndex] = useState(null)
 
   // Load any existing save once on startup, before anything can overwrite it.
@@ -248,8 +251,10 @@ function App() {
   }, [pulledResults, cash])
 
   // Z, X, C, V, B toggle the toolbar's five panels open/closed, matching the
-  // buttons themselves - a second press of the same key closes it again. No
-  // stale-closure risk here since setState setters are stable identities.
+  // buttons themselves - a second press of the same key closes it again. N is
+  // the one oddball, since Rebirth now lives above the lever instead of in
+  // the toolbar. No stale-closure risk here since setState setters are
+  // stable identities.
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.ctrlKey || e.metaKey || e.altKey) return
@@ -268,7 +273,7 @@ function App() {
           setDexOpen((o) => !o)
           break
         case 'KeyB':
-          setRebirthOpen((o) => !o)
+          setBulkCrateOpen((o) => !o)
           break
         default:
           return
@@ -277,6 +282,22 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  // N toggles the Rebirth panel - always allowed to close, but only opens if
+  // you can actually afford it, matching its grayed-out disabled button
+  // state. Needs real deps (unlike the switch above) since it reads cash and
+  // rebirthCount rather than just calling a stable setter.
+  useEffect(() => {
+    if (!data) return
+    function handleKeyDown(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.code !== 'KeyN') return
+      setRebirthOpen((o) => (o ? false : cash >= rebirthCost(rebirthCount, data.rebirth)))
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [data, cash, rebirthCount])
 
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
@@ -319,6 +340,13 @@ function App() {
     setCash(remainingCash)
     setInventory((inv) => [...inv, ...boughtItems])
     setPulledResults((prev) => prev.map((r, i) => (boughtIndices.includes(i) ? null : r)))
+  }
+
+  function buyBulkCrate(crate) {
+    if (cash < crate.price || inventory.length + crate.pullCount > MAX_INVENTORY) return
+    const items = rollCrate(crate.pullCount, data.ingredients, data.lever.basePullChance, redBonus)
+    setCash((c) => c - crate.price)
+    setInventory((inv) => [...inv, ...items])
   }
 
   function buyMitt(mitt) {
@@ -511,6 +539,7 @@ function App() {
 
   const hasEmptyUnlockedSlot = gridSlots.some((s) => s.unlocked && !s.stove)
   const sellMultiplier = sellValueMultiplier(rebirthCount, data.rebirth)
+  const rebirthPrice = rebirthCost(rebirthCount, data.rebirth)
   const mittBonus = equippedMittTier ? data.luck.mittRedBonus[equippedMittTier] : 0
   const activeLuckPotion =
     activePotions.luck && activePotions.luck.expiresAt > Date.now() ? activePotions.luck : null
@@ -527,6 +556,14 @@ function App() {
       />
       <p className="cash">{formatMoney(cash)}</p>
       <ActivePotions activePotions={activePotions} potionsData={data.potions} />
+
+      <button
+        className="rebirth-quick-btn"
+        onClick={() => setRebirthOpen((o) => !o)}
+        disabled={!rebirthOpen && cash < rebirthPrice}
+      >
+        Rebirth {formatMoney(rebirthPrice)} (N)
+      </button>
 
       <Lever
         ingredientsData={data.ingredients}
@@ -555,16 +592,18 @@ function App() {
 
       <div className="toolbar">
         <button onClick={() => setShopOpen((o) => !o)}>
-          {shopOpen ? 'Close Stove Shop' : 'Open Stove Shop'}
+          {shopOpen ? 'Close Stove Shop (Z)' : 'Open Stove Shop (Z)'}
         </button>
         <button onClick={() => setMittShopOpen((o) => !o)}>
-          {mittShopOpen ? 'Close Mitt Shop' : 'Open Mitt Shop'}
+          {mittShopOpen ? 'Close Mitt Shop (X)' : 'Open Mitt Shop (X)'}
         </button>
         <button onClick={() => setPotionShopOpen((o) => !o)}>
-          {potionShopOpen ? 'Close Potion Shop' : 'Open Potion Shop'}
+          {potionShopOpen ? 'Close Potion Shop (C)' : 'Open Potion Shop (C)'}
         </button>
-        <button onClick={() => setDexOpen((o) => !o)}>Dex ({Object.keys(dex).length})</button>
-        <button onClick={() => setRebirthOpen((o) => !o)}>Rebirth ({rebirthCount})</button>
+        <button onClick={() => setDexOpen((o) => !o)}>Dex ({Object.keys(dex).length}) (V)</button>
+        <button onClick={() => setBulkCrateOpen((o) => !o)}>
+          {bulkCrateOpen ? 'Close Bulk Crate (B)' : 'Open Bulk Crate (B)'}
+        </button>
       </div>
 
       {dexOpen && (
@@ -583,6 +622,16 @@ function App() {
 
       {discoveryPopup && (
         <DiscoveryPopup popup={discoveryPopup} onClose={() => setDiscoveryPopup(null)} />
+      )}
+
+      {bulkCrateOpen && (
+        <BulkCratePanel
+          cratesData={data.bulkCrates}
+          cash={cash}
+          inventoryCount={inventory.length}
+          maxInventory={MAX_INVENTORY}
+          onBuy={buyBulkCrate}
+        />
       )}
 
       {shopOpen && (
