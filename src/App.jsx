@@ -241,6 +241,37 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulledResults, cash])
 
+  // Z, X, C, V, B toggle the toolbar's five panels open/closed, matching the
+  // buttons themselves - a second press of the same key closes it again. No
+  // stale-closure risk here since setState setters are stable identities.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      switch (e.code) {
+        case 'KeyZ':
+          setShopOpen((o) => !o)
+          break
+        case 'KeyX':
+          setMittShopOpen((o) => !o)
+          break
+        case 'KeyC':
+          setPotionShopOpen((o) => !o)
+          break
+        case 'KeyV':
+          setDexOpen((o) => !o)
+          break
+        case 'KeyB':
+          setRebirthOpen((o) => !o)
+          break
+        default:
+          return
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
 
@@ -523,8 +554,8 @@ function App() {
         <button onClick={() => setPotionShopOpen((o) => !o)}>
           {potionShopOpen ? 'Close Potion Shop' : 'Open Potion Shop'}
         </button>
-        <button onClick={() => setDexOpen(true)}>Dex ({Object.keys(dex).length})</button>
-        <button onClick={() => setRebirthOpen(true)}>Rebirth ({rebirthCount})</button>
+        <button onClick={() => setDexOpen((o) => !o)}>Dex ({Object.keys(dex).length})</button>
+        <button onClick={() => setRebirthOpen((o) => !o)}>Rebirth ({rebirthCount})</button>
       </div>
 
       {dexOpen && (
