@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { formatNumber } from '../game/format'
 
 const PAGE_SIZE = 1000
 
-export default function Dex({ dex, onClose }) {
+export default function Dex({ dex, totalPossible, onClose }) {
   const [page, setPage] = useState(0)
 
   const entries = Object.values(dex).sort(
@@ -15,7 +16,9 @@ export default function Dex({ dex, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal dex-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Dex ({entries.length} discovered)</h3>
+          <h3>
+            Dex ({entries.length} / {formatNumber(totalPossible)} discovered)
+          </h3>
           <button onClick={onClose}>Close</button>
         </div>
         {entries.length === 0 && <p className="hint">Nothing discovered yet - go cook something.</p>}

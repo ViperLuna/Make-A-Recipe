@@ -4,7 +4,7 @@ import { totalCookSeconds } from './game/economy'
 import { buildIngredientWordMap } from './game/naming'
 import { rollMutation } from './game/mutations'
 import { loadState, saveState } from './game/save'
-import { comboKeyOf } from './game/dex'
+import { comboKeyOf, totalPossibleCombos } from './game/dex'
 import { formatMoney } from './game/format'
 import { rebirthCost, sellValueMultiplier } from './game/rebirth'
 import { computeReadyDish } from './game/dish'
@@ -153,6 +153,13 @@ function App() {
   const wordMap = useMemo(() => {
     if (!data) return null
     return buildIngredientWordMap(data.ingredients.ingredients.length, data.dishWordLists.descriptors)
+  }, [data])
+
+  // Total distinct dishes the game can ever produce, for the Dex's "x / total" header.
+  const totalPossibleDishes = useMemo(() => {
+    if (!data) return 0
+    const maxComboSize = Math.max(...data.stoves.stoves.map((s) => s.slotCount))
+    return totalPossibleCombos(data.ingredients.ingredients.length, maxComboSize)
   }, [data])
 
   // If the array shrinks (item added to a stove) while a now-invalid index is
@@ -472,7 +479,9 @@ function App() {
         <button onClick={() => setRebirthOpen(true)}>Rebirth ({rebirthCount})</button>
       </div>
 
-      {dexOpen && <Dex dex={dex} onClose={() => setDexOpen(false)} />}
+      {dexOpen && (
+        <Dex dex={dex} totalPossible={totalPossibleDishes} onClose={() => setDexOpen(false)} />
+      )}
 
       {rebirthOpen && (
         <RebirthPanel
