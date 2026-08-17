@@ -68,6 +68,28 @@
   text-overflow: ellipsis;
 }
 
+.lever-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.lever-buy-slot {
+  min-height: 51px;
+  display: flex;
+  align-items: center;
+}
+
+.lever-buy-slot button {
+  display: block;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+
 .pulled-actions {
   display: flex;
   flex-wrap: wrap;
@@ -81,6 +103,11 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 0.4rem;
   margin-bottom: 1.5rem;
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 0.3rem;
+  border: 1px solid #333;
+  border-radius: 8px;
 }
 
 .stove-card {
@@ -141,12 +168,6 @@
   width: auto;
   font-size: 0.6rem;
   padding: 0.05rem 0.25rem;
-}
-
-.dish-name {
-  font-weight: bold;
-  font-style: italic;
-  font-size: 0.7rem;
 }
 
 .mutation-tag {
