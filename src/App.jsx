@@ -9,6 +9,7 @@ import { formatMoney } from './game/format'
 import { rebirthCost, sellValueMultiplier } from './game/rebirth'
 import { computeReadyDish } from './game/dish'
 import { rollCrate } from './game/bulkCrate'
+import { getShopStock, ROTATION_MS } from './game/shop'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
@@ -113,6 +114,11 @@ function App() {
   const [rebirthOpen, setRebirthOpen] = useState(false)
   const [bulkCrateOpen, setBulkCrateOpen] = useState(false)
   const [hoveredInventoryIndex, setHoveredInventoryIndex] = useState(null)
+  // How many of each stove name have been bought during stoveStockBucket's
+  // rotation window. Persisted (not just in-memory) so reloading the page
+  // can't be used to dodge the per-rotation purchase limit.
+  const [stoveStockPurchased, setStoveStockPurchased] = useState({})
+  const [stoveStockBucket, setStoveStockBucket] = useState(0)
 
   // Load any existing save once on startup, before anything can overwrite it.
   useEffect(() => {
@@ -134,6 +140,9 @@ function App() {
           setActivePotions(saved.activePotions ?? { luck: null, speed: null })
           // Pre-rebirth saves won't have this field either - default to no rebirths yet.
           setRebirthCount(saved.rebirthCount ?? 0)
+          // Pre-stove-stock-cap saves won't have these either - default to nothing bought yet.
+          setStoveStockPurchased(saved.stoveStockPurchased ?? {})
+          setStoveStockBucket(saved.stoveStockBucket ?? 0)
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -152,6 +161,8 @@ function App() {
       equippedMittTier,
       activePotions,
       rebirthCount,
+      stoveStockPurchased,
+      stoveStockBucket,
     })
   }, [
     saveLoaded,
@@ -163,6 +174,8 @@ function App() {
     equippedMittTier,
     activePotions,
     rebirthCount,
+    stoveStockPurchased,
+    stoveStockBucket,
   ])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
@@ -503,6 +516,17 @@ function App() {
     if (cash < stoveDef.price) return
     const target = gridSlots.find((s) => s.unlocked && !s.stove)
     if (!target) return
+
+    // Enforce the shop's per-rotation stock cap, which the UI only ever
+    // displayed before - nothing tracked or blocked repeat purchases.
+    const now = Date.now()
+    const bucket = Math.floor(now / ROTATION_MS)
+    const { stock } = getShopStock(data.stoves, data.stoveShop, now)
+    const listing = stock.find((s) => s.stove.name === stoveDef.name)
+    if (!listing) return
+    const purchasedSoFar = bucket === stoveStockBucket ? (stoveStockPurchased[stoveDef.name] ?? 0) : 0
+    if (purchasedSoFar >= listing.quantity) return
+
     setCash((c) => c - stoveDef.price)
     setGridSlots((prev) =>
       prev.map((s) =>
@@ -521,6 +545,11 @@ function App() {
           : s
       )
     )
+    setStoveStockBucket(bucket)
+    setStoveStockPurchased((prev) => {
+      const base = bucket === stoveStockBucket ? prev : {}
+      return { ...base, [stoveDef.name]: (base[stoveDef.name] ?? 0) + 1 }
+    })
   }
 
   function doRebirth() {
@@ -641,6 +670,8 @@ function App() {
           cash={cash}
           hasEmptyUnlockedSlot={hasEmptyUnlockedSlot}
           onBuy={buyStove}
+          purchasedThisRotation={stoveStockPurchased}
+          purchasedBucket={stoveStockBucket}
         />
       )}
 
