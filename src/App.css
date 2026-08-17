@@ -1,7 +1,7 @@
 .game {
   max-width: 480px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 220px;
   text-align: center;
   font-family: 'Lexend', sans-serif;
 }
@@ -266,6 +266,27 @@
 .shop-item-detail {
   font-size: 0.8rem;
   color: #aaa;
+}
+
+.inventory {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #1a1a1a;
+  border-top: 2px solid #444;
+  padding: 0.5rem 1rem;
+  box-sizing: border-box;
+  z-index: 50;
+}
+
+.inventory h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.9rem;
 }
 
 .inventory ul {
