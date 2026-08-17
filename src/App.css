@@ -361,7 +361,7 @@ button {
   margin-top: 0.5rem;
 }
 
-.dex-pager {
+.pager {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -370,7 +370,7 @@ button {
   font-size: 0.75rem;
 }
 
-.dex-pager button {
+.pager button {
   width: auto;
   padding: 0.2rem 0.6rem;
 }
