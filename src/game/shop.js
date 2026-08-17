@@ -1,6 +1,6 @@
 import { mulberry32 } from './rng'
 
-const ROTATION_MS = 5 * 60 * 1000
+export const ROTATION_MS = 5 * 60 * 1000
 
 function rotationRand(now) {
   const bucket = Math.floor(now / ROTATION_MS)
