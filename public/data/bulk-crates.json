@@ -1,0 +1,8 @@
+{
+  "note": "Bulk crates: pay upfront for N lever pulls sight-unseen, all added straight to inventory. Prices are calibrated by simulation so the crate's total ingredient value beats its price roughly targetWinRate of the time - a real gamble, not a guaranteed discount. Bigger crates cost more per pull but are far safer bets (their outcomes cluster tightly around the true average, per the law of large numbers), so the 50-crate is the real gamble and the 1000-crate is close to a sure thing.",
+  "crates": [
+    { "id": "crate50", "name": "Crate of 50", "pullCount": 50, "price": 5900000, "targetWinRate": 0.65 },
+    { "id": "crate100", "name": "Crate of 100", "pullCount": 100, "price": 15000000, "targetWinRate": 0.75 },
+    { "id": "crate1000", "name": "Crate of 1000", "pullCount": 1000, "price": 420000000, "targetWinRate": 0.85 }
+  ]
+}
