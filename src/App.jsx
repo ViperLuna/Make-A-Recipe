@@ -222,11 +222,16 @@ function App() {
   }, [data, gridSlots, inventory, hoveredInventoryIndex, wordMap, rebirthCount, activePotions, dex])
 
   // Q, W, E buy the pulled ingredient from lever mechanism slots 0-2, left to
-  // right - same effect as clicking that reel's own Buy button.
+  // right - same effect as clicking that reel's own Buy button. R buys every
+  // affordable pulled result at once.
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.ctrlKey || e.metaKey || e.altKey) return
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.code === 'KeyR') {
+        buyAllPulled()
+        return
+      }
       const slotIndex = LEVER_KEY_TO_SLOT[e.code]
       if (slotIndex === undefined) return
       buyPulledAt(slotIndex)
@@ -254,6 +259,27 @@ function App() {
     setCash((c) => c - item.price)
     setInventory((inv) => [...inv, item])
     setPulledResults((prev) => prev.map((r, i) => (i === index ? null : r)))
+  }
+
+  // Buys every affordable pulled result in one go. Runs its own affordability
+  // check against a running total rather than calling buyPulledAt per slot,
+  // since three back-to-back calls would each check against the same
+  // not-yet-updated cash and could let you buy more than you can afford.
+  function buyAllPulled() {
+    let remainingCash = cash
+    const boughtIndices = []
+    const boughtItems = []
+    pulledResults.forEach((item, i) => {
+      if (item && remainingCash >= item.price) {
+        remainingCash -= item.price
+        boughtIndices.push(i)
+        boughtItems.push(item)
+      }
+    })
+    if (boughtItems.length === 0) return
+    setCash(remainingCash)
+    setInventory((inv) => [...inv, ...boughtItems])
+    setPulledResults((prev) => prev.map((r, i) => (boughtIndices.includes(i) ? null : r)))
   }
 
   function buyMitt(mitt) {
