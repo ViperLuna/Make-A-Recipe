@@ -1,7 +1,15 @@
+import { useState } from 'react'
+
+const PAGE_SIZE = 1000
+
 export default function Dex({ dex, onClose }) {
+  const [page, setPage] = useState(0)
+
   const entries = Object.values(dex).sort(
     (a, b) => a.ingredientCount - b.ingredientCount || a.name.localeCompare(b.name)
   )
+  const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
+  const pageEntries = entries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -11,9 +19,24 @@ export default function Dex({ dex, onClose }) {
           <button onClick={onClose}>Close</button>
         </div>
         {entries.length === 0 && <p className="hint">Nothing discovered yet - go cook something.</p>}
+
+        {totalPages > 1 && (
+          <div className="dex-pager">
+            <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+              Prev
+            </button>
+            <span>
+              {page * PAGE_SIZE + 1}-{Math.min(entries.length, (page + 1) * PAGE_SIZE)} of {entries.length}
+            </span>
+            <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+              Next
+            </button>
+          </div>
+        )}
+
         <ul className="dex-list">
-          {entries.map((entry, i) => (
-            <li key={i}>
+          {pageEntries.map((entry, i) => (
+            <li key={page * PAGE_SIZE + i}>
               <span className="dex-name">{entry.name}</span>
               <span className="dex-ingredients">{entry.ingredientNames.join(', ')}</span>
               {entry.mutationsSeen.length > 0 && (
