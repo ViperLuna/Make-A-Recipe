@@ -66,6 +66,8 @@ export default function Lever({
 }) {
   const [trigger, setTrigger] = useState(0)
   const [spinning, setSpinning] = useState(false)
+  const [autoPull, setAutoPull] = useState(false)
+  const [autoPullThreshold, setAutoPullThreshold] = useState('')
   // Counts real results in for the in-flight trigger, so "spinning" clears
   // only once every box has actually reported - not on a guessed timer. A
   // second independent timer here used to drift out of sync with each
@@ -86,6 +88,26 @@ export default function Lever({
     resultsInRef.current += 1
     if (resultsInRef.current >= mechanismCount) setSpinning(false)
   }
+
+  // Auto Pull: once a spin settles, keeps pulling on its own - unless a
+  // landed result meets the stop condition, in which case it waits instead
+  // of pulling again. With the threshold field blank, the stop condition is
+  // "any landed result is affordable right now"; with a number in it, the
+  // condition is "any landed result's price is at least that number", so the
+  // player can let it run past cheap stuff and only stop for something big.
+  // Buying the offending result (or overwriting it with a manual pull)
+  // changes pulledResults, which re-runs this effect and lets it resume.
+  useEffect(() => {
+    if (!autoPull || spinning) return
+    const threshold = autoPullThreshold.trim() === '' ? null : Number(autoPullThreshold)
+    const shouldWait = pulledResults.some((item) => {
+      if (!item) return false
+      return threshold != null ? item.price >= threshold : cash >= item.price
+    })
+    if (shouldWait) return
+    pull()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPull, spinning, pulledResults, cash, autoPullThreshold])
 
   // Spacebar pulls the lever too, matching the button.
   useEffect(() => {
@@ -122,9 +144,27 @@ export default function Lever({
           </div>
         ))}
       </div>
-      <button onClick={pull} disabled={spinning}>
-        {spinning ? 'Pulling...' : 'Pull Lever'}
-      </button>
+      <div className="lever-controls">
+        <button onClick={pull} disabled={spinning}>
+          {spinning ? 'Pulling...' : 'Pull Lever'}
+        </button>
+        <button
+          className={`auto-pull-toggle${autoPull ? ' active' : ''}`}
+          onClick={() => setAutoPull((o) => !o)}
+        >
+          Auto Pull: {autoPull ? 'On' : 'Off'}
+        </button>
+        {autoPull && (
+          <input
+            type="number"
+            className="auto-pull-threshold"
+            placeholder="Stop at price..."
+            min="0"
+            value={autoPullThreshold}
+            onChange={(e) => setAutoPullThreshold(e.target.value)}
+          />
+        )}
+      </div>
     </div>
   )
 }
