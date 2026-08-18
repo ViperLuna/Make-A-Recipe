@@ -9,13 +9,13 @@ export default function Inventory({
   maxInventory,
   selectedStove,
   canAddToSelected,
-  hoveredInventoryIndex,
-  onHoverIndex,
   onAdd,
+  sortField,
+  sortDir,
+  onSortFieldChange,
+  onSortDirChange,
 }) {
   const [page, setPage] = useState(0)
-  const [sortField, setSortField] = useState('purchased')
-  const [sortDir, setSortDir] = useState('asc')
 
   const sorted = sortInventory(inventory, sortField, sortDir)
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
@@ -46,14 +46,14 @@ export default function Inventory({
 
       {inventory.length > 0 && (
         <div className="inventory-sort">
-          <select value={sortField} onChange={(e) => setSortField(e.target.value)}>
+          <select value={sortField} onChange={(e) => onSortFieldChange(e.target.value)}>
             {SORT_FIELDS.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
               </option>
             ))}
           </select>
-          <button onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}>
+          <button onClick={() => onSortDirChange(sortDir === 'asc' ? 'desc' : 'asc')}>
             {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
           </button>
         </div>
@@ -75,12 +75,10 @@ export default function Inventory({
 
       <ul>
         {pageEntries.map(({ item, index }) => (
-          <li
-            key={index}
-            className={hoveredInventoryIndex === index ? 'hovered' : ''}
-            onMouseEnter={() => onHoverIndex(index)}
-            onMouseLeave={() => onHoverIndex((idx) => (idx === index ? null : idx))}
-          >
+          // data-inventory-index lets the digit-hotkey handler read the live
+          // :hover state directly instead of trusting React state that a
+          // sort/page reflow could desync from reality (see App.jsx).
+          <li key={index} data-inventory-index={index}>
             {item.name} ({formatMoney(item.price)})
             {selectedStove && (
               <button onClick={() => onAdd(index)} disabled={!canAddToSelected}>

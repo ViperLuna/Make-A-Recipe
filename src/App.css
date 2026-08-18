@@ -309,7 +309,7 @@
   border-bottom: 1px solid #333;
 }
 
-.inventory li.hovered {
+.inventory li:hover {
   background: rgba(245, 146, 62, 0.15);
 }
 

@@ -113,7 +113,8 @@ function App() {
   const [rebirthCount, setRebirthCount] = useState(0)
   const [rebirthOpen, setRebirthOpen] = useState(false)
   const [bulkCrateOpen, setBulkCrateOpen] = useState(false)
-  const [hoveredInventoryIndex, setHoveredInventoryIndex] = useState(null)
+  const [inventorySortField, setInventorySortField] = useState('purchased')
+  const [inventorySortDir, setInventorySortDir] = useState('asc')
   // How many of each stove name have been bought during stoveStockBucket's
   // rotation window. Persisted (not just in-memory) so reloading the page
   // can't be used to dodge the per-rotation purchase limit.
@@ -143,6 +144,9 @@ function App() {
           // Pre-stove-stock-cap saves won't have these either - default to nothing bought yet.
           setStoveStockPurchased(saved.stoveStockPurchased ?? {})
           setStoveStockBucket(saved.stoveStockBucket ?? 0)
+          // Pre-sort saves won't have these either - default to purchase order ascending.
+          setInventorySortField(saved.inventorySortField ?? 'purchased')
+          setInventorySortDir(saved.inventorySortDir ?? 'asc')
         }
       })
       .finally(() => setSaveLoaded(true))
@@ -163,6 +167,8 @@ function App() {
       rebirthCount,
       stoveStockPurchased,
       stoveStockBucket,
+      inventorySortField,
+      inventorySortDir,
     })
   }, [
     saveLoaded,
@@ -176,6 +182,8 @@ function App() {
     rebirthCount,
     stoveStockPurchased,
     stoveStockBucket,
+    inventorySortField,
+    inventorySortDir,
   ])
 
   // Built once: each ingredient's permanent naming word, from the deterministic seed.
@@ -191,19 +199,18 @@ function App() {
     return totalPossibleCombos(data.ingredients.ingredients.length, maxComboSize)
   }, [data])
 
-  // If the array shrinks (item added to a stove) while a now-invalid index is
-  // still "hovered", drop it rather than let a stale index linger.
-  useEffect(() => {
-    if (hoveredInventoryIndex !== null && hoveredInventoryIndex >= inventory.length) {
-      setHoveredInventoryIndex(null)
-    }
-  }, [inventory, hoveredInventoryIndex])
-
   // Number-row hotkeys 1-9,0 act on the matching stove slot: while hovering an
   // inventory item, they drop that ingredient into the stove; otherwise they
   // sell it if it's done cooking, start cooking it if it's holding ingredients
   // but idle, or just select it. A missing/locked slot, or an already-selected
   // stove, is a no-op either way.
+  //
+  // "Hovering" is checked live via :hover at keydown time, not via React
+  // state updated through mouseenter/mouseleave - sorting or paging the
+  // inventory reorders/replaces its <li>s without the mouse actually moving,
+  // and browsers can fire a fresh (or no) enter/leave event in response to
+  // that reflow independent of real user intent. Querying the DOM directly
+  // is immune to that: :hover always reflects where the pointer truly is.
   useEffect(() => {
     if (!data) return
     function handleKeyDown(e) {
@@ -214,8 +221,9 @@ function App() {
       const slot = gridSlots[slotIndex]
       if (!slot?.unlocked || !slot.stove) return
 
-      if (hoveredInventoryIndex !== null) {
-        addItemToStove(slot.id, hoveredInventoryIndex)
+      const hoveredLi = document.querySelector('.inventory li:hover')
+      if (hoveredLi) {
+        addItemToStove(slot.id, Number(hoveredLi.dataset.inventoryIndex))
         return
       }
 
@@ -241,7 +249,7 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, gridSlots, inventory, hoveredInventoryIndex, wordMap, rebirthCount, activePotions, dex])
+  }, [data, gridSlots, inventory, wordMap, rebirthCount, activePotions, dex])
 
   // Q, W, E buy the pulled ingredient from lever mechanism slots 0-2, left to
   // right - same effect as clicking that reel's own Buy button. R buys every
@@ -719,9 +727,11 @@ function App() {
         maxInventory={MAX_INVENTORY}
         selectedStove={selectedStove}
         canAddToSelected={canAddToSelected}
-        hoveredInventoryIndex={hoveredInventoryIndex}
-        onHoverIndex={setHoveredInventoryIndex}
         onAdd={addToSelectedStove}
+        sortField={inventorySortField}
+        sortDir={inventorySortDir}
+        onSortFieldChange={setInventorySortField}
+        onSortDirChange={setInventorySortDir}
       />
     </div>
   )
