@@ -613,6 +613,7 @@ function App() {
         cash={cash}
         onBuy={buyPulledAt}
         inventoryFull={inventory.length >= MAX_INVENTORY}
+        resetSignal={rebirthCount}
       />
 
       <div className="pulled-actions">
