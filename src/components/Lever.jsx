@@ -14,10 +14,23 @@ const TIER_COLORS = {
 // One independent spinner. All boxes share the same trigger and duration (so
 // they start and finish together), but each rolls its own real result and its
 // own filler frames - genuinely independent outcomes, not copies of each other.
-function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, onResult }) {
+function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal, onResult }) {
   const [display, setDisplay] = useState(null)
+  const prevTriggerRef = useRef(trigger)
 
   useEffect(() => {
+    // Rebirth bumps resetSignal without bumping trigger. Cleanup from the
+    // previous run (below) has already cancelled any in-flight timeout at
+    // this point, so just bail out here instead of starting a fresh spin -
+    // otherwise a spin left running across a rebirth would eventually report
+    // a result computed from stale pre-rebirth data (old redBonus, etc.)
+    // straight into the just-reset pulledResults.
+    const isNewTrigger = trigger !== prevTriggerRef.current
+    prevTriggerRef.current = trigger
+    if (!isNewTrigger) {
+      setDisplay(null)
+      return
+    }
     if (trigger === 0) return
     const realResult = pullIngredient(ingredientsData, leverData.basePullChance, redBonus)
     const { startMs, endMs } = leverData.spinAnimation.flickerIntervalRange
@@ -42,7 +55,7 @@ function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, onResult })
     tick()
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trigger])
+  }, [trigger, resetSignal])
 
   return (
     <div className="lever-box" style={{ borderColor: display ? TIER_COLORS[display.tier] : '#888' }}>
@@ -63,6 +76,7 @@ export default function Lever({
   cash,
   onBuy,
   inventoryFull = false,
+  resetSignal,
 }) {
   const [trigger, setTrigger] = useState(0)
   const [spinning, setSpinning] = useState(false)
@@ -110,6 +124,17 @@ export default function Lever({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPull, spinning, pulledResults, cash, autoPullThreshold])
 
+  // Rebirth (resetSignal = rebirthCount) can land mid-spin. Un-stick the
+  // button and drop any in-progress threshold immediately rather than
+  // waiting for the (now possibly-orphaned) spin to report - the boxes
+  // themselves independently cancel their own stale timers off the same
+  // signal (see SpinnerBox).
+  useEffect(() => {
+    setSpinning(false)
+    resultsInRef.current = 0
+    setAutoPullThreshold('')
+  }, [resetSignal])
+
   // Spacebar pulls the lever too, matching the button.
   useEffect(() => {
     function handleKeyDown(e) {
@@ -133,6 +158,7 @@ export default function Lever({
               leverData={leverData}
               redBonus={redBonus}
               trigger={trigger}
+              resetSignal={resetSignal}
               onResult={(result) => handleBoxResult(i, result)}
             />
             <div className="lever-buy-slot">
