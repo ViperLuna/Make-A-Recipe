@@ -91,18 +91,19 @@ export default function Lever({
 
   // Auto Pull: once a spin settles, keeps pulling on its own - unless a
   // landed result meets the stop condition, in which case it waits instead
-  // of pulling again. With the threshold field blank, the stop condition is
-  // "any landed result is affordable right now"; with a number in it, the
-  // condition is "any landed result's price is at least that number", so the
-  // player can let it run past cheap stuff and only stop for something big.
-  // Buying the offending result (or overwriting it with a manual pull)
-  // changes pulledResults, which re-runs this effect and lets it resume.
+  // of pulling again. A result always has to be affordable to trigger a
+  // pause (no point stopping for something you can't buy anyway); with a
+  // number in the threshold field, it additionally has to be priced at
+  // least that high, so the player can let it run past cheap-but-affordable
+  // stuff and only stop for something big. Buying the offending result (or
+  // overwriting it with a manual pull) changes pulledResults, which re-runs
+  // this effect and lets it resume.
   useEffect(() => {
     if (!autoPull || spinning) return
     const threshold = autoPullThreshold.trim() === '' ? null : Number(autoPullThreshold)
     const shouldWait = pulledResults.some((item) => {
-      if (!item) return false
-      return threshold != null ? item.price >= threshold : cash >= item.price
+      if (!item || cash < item.price) return false
+      return threshold != null ? item.price >= threshold : true
     })
     if (shouldWait) return
     pull()
