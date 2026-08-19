@@ -392,6 +392,22 @@ button {
   margin-top: 0.5rem;
 }
 
+.backup-modal {
+  width: 320px;
+}
+
+.backup-modal > button {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.backup-confirm {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #444;
+}
+
 .pager {
   display: flex;
   align-items: center;
