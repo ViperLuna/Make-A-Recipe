@@ -17,6 +17,7 @@ import StoveShop from './components/StoveShop'
 import MittShop from './components/MittShop'
 import PotionShop from './components/PotionShop'
 import BulkCratePanel from './components/BulkCratePanel'
+import BackupPanel from './components/BackupPanel'
 import Dex from './components/Dex'
 import DiscoveryPopup from './components/DiscoveryPopup'
 import RebirthPanel from './components/RebirthPanel'
@@ -120,36 +121,46 @@ function App() {
   // can't be used to dodge the per-rotation purchase limit.
   const [stoveStockPurchased, setStoveStockPurchased] = useState({})
   const [stoveStockBucket, setStoveStockBucket] = useState(0)
+  const [backupOpen, setBackupOpen] = useState(false)
+
+  // Shared by the startup load and by importing a backup file, so the two
+  // paths can't drift apart on what each field defaults to.
+  function applySavedState(saved) {
+    setCash(saved.cash)
+    setInventory(saved.inventory)
+    setGridSlots(saved.gridSlots ?? migrateOldStoves(saved.stoves ?? []))
+    // Pre-mechanism-slot saves won't have this field - default to just slot 1 unlocked.
+    setMechanismSlots(saved.mechanismSlots ?? INITIAL_MECHANISM_SLOTS)
+    // Pre-dex saves won't have this field either - default to nothing discovered yet.
+    setDex(saved.dex ?? {})
+    // Pre-mitt saves won't have this field either - default to no mitt equipped.
+    setEquippedMittTier(saved.equippedMittTier ?? null)
+    // Pre-potion saves won't have this field either - default to none active.
+    // (Active potions are meant to survive things like rebirth, so restoring
+    // the raw expiresAt timestamp is correct even across a reload/restart.)
+    setActivePotions(saved.activePotions ?? { luck: null, speed: null })
+    // Pre-rebirth saves won't have this field either - default to no rebirths yet.
+    setRebirthCount(saved.rebirthCount ?? 0)
+    // Pre-stove-stock-cap saves won't have these either - default to nothing bought yet.
+    setStoveStockPurchased(saved.stoveStockPurchased ?? {})
+    setStoveStockBucket(saved.stoveStockBucket ?? 0)
+    // Pre-sort saves won't have these either - default to purchase order ascending.
+    setInventorySortField(saved.inventorySortField ?? 'purchased')
+    setInventorySortDir(saved.inventorySortDir ?? 'asc')
+    // Not part of the persisted save at all (ephemeral UI state) - reset so an
+    // imported save can't leave a stale lever result or selection dangling.
+    setPulledResults(Array(TOTAL_MECHANISM_SLOTS).fill(null))
+    setSelectedStoveId(null)
+  }
 
   // Load any existing save once on startup, before anything can overwrite it.
   useEffect(() => {
     loadState()
       .then((saved) => {
-        if (saved) {
-          setCash(saved.cash)
-          setInventory(saved.inventory)
-          setGridSlots(saved.gridSlots ?? migrateOldStoves(saved.stoves ?? []))
-          // Pre-mechanism-slot saves won't have this field - default to just slot 1 unlocked.
-          setMechanismSlots(saved.mechanismSlots ?? INITIAL_MECHANISM_SLOTS)
-          // Pre-dex saves won't have this field either - default to nothing discovered yet.
-          setDex(saved.dex ?? {})
-          // Pre-mitt saves won't have this field either - default to no mitt equipped.
-          setEquippedMittTier(saved.equippedMittTier ?? null)
-          // Pre-potion saves won't have this field either - default to none active.
-          // (Active potions are meant to survive things like rebirth, so restoring
-          // the raw expiresAt timestamp is correct even across a reload/restart.)
-          setActivePotions(saved.activePotions ?? { luck: null, speed: null })
-          // Pre-rebirth saves won't have this field either - default to no rebirths yet.
-          setRebirthCount(saved.rebirthCount ?? 0)
-          // Pre-stove-stock-cap saves won't have these either - default to nothing bought yet.
-          setStoveStockPurchased(saved.stoveStockPurchased ?? {})
-          setStoveStockBucket(saved.stoveStockBucket ?? 0)
-          // Pre-sort saves won't have these either - default to purchase order ascending.
-          setInventorySortField(saved.inventorySortField ?? 'purchased')
-          setInventorySortDir(saved.inventorySortDir ?? 'asc')
-        }
+        if (saved) applySavedState(saved)
       })
       .finally(() => setSaveLoaded(true))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Persist on every change, once the initial load attempt has finished
@@ -643,6 +654,9 @@ function App() {
         <button onClick={() => setBulkCrateOpen((o) => !o)}>
           {bulkCrateOpen ? 'Close Bulk Crate (B)' : 'Open Bulk Crate (B)'}
         </button>
+        <button onClick={() => setBackupOpen((o) => !o)}>
+          {backupOpen ? 'Close Backup' : 'Open Backup'}
+        </button>
       </div>
 
       {dexOpen && (
@@ -670,6 +684,27 @@ function App() {
           inventoryCount={inventory.length}
           maxInventory={MAX_INVENTORY}
           onBuy={buyBulkCrate}
+        />
+      )}
+
+      {backupOpen && (
+        <BackupPanel
+          saveSnapshot={{
+            cash,
+            inventory,
+            gridSlots,
+            mechanismSlots,
+            dex,
+            equippedMittTier,
+            activePotions,
+            rebirthCount,
+            stoveStockPurchased,
+            stoveStockBucket,
+            inventorySortField,
+            inventorySortDir,
+          }}
+          onImport={applySavedState}
+          onClose={() => setBackupOpen(false)}
         />
       )}
 
