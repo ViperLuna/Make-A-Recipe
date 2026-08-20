@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { computeReadyDish } from '../game/dish'
 import { formatMoney } from '../game/format'
+import { playSfx } from '../game/audio'
 
 export default function Stove({
   stove,
@@ -33,6 +34,23 @@ export default function Stove({
   const isEditable = !stove.cookCompleteAt
   const isFillable = isEditable && stove.contents.length < stove.maxSlots
   const canStart = isEditable && stove.contents.length > 0
+
+  // Only rings for a completion witnessed live (isCooking observed before
+  // isDone) - otherwise reloading the page onto an already-finished stove
+  // (cookCompleteAt restored from a save, remaining computed as 0 on the
+  // very first tick) would ring the bell for something that finished while
+  // nobody was watching.
+  const wasDoneRef = useRef(false)
+  const sawCookingRef = useRef(false)
+  useEffect(() => {
+    sawCookingRef.current = false
+    wasDoneRef.current = false
+  }, [stove.cookCompleteAt])
+  useEffect(() => {
+    if (isCooking) sawCookingRef.current = true
+    if (isDone && !wasDoneRef.current && sawCookingRef.current) playSfx('timerBell')
+    wasDoneRef.current = isDone
+  }, [isCooking, isDone])
 
   // Drop the confirmation state if the player clicks away to another stove.
   useEffect(() => {

@@ -14,6 +14,7 @@ const SFX_POOL_SIZE = 4
 export const MUSIC = {}
 export const SFX = {
   reelTick: 'audio/reel-tick.mp3',
+  timerBell: 'audio/timer-bell.mp3',
 }
 
 function readNumber(key, fallback) {
