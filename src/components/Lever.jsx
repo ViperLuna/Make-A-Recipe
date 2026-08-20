@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { pullIngredient } from '../game/economy'
 import { formatMoney } from '../game/format'
+import { playSfx } from '../game/audio'
 
 const TIER_COLORS = {
   white: '#e8e8e8',
@@ -14,7 +15,7 @@ const TIER_COLORS = {
 // One independent spinner. All boxes share the same trigger and duration (so
 // they start and finish together), but each rolls its own real result and its
 // own filler frames - genuinely independent outcomes, not copies of each other.
-function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal, onResult }) {
+function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal, onResult, isPrimary }) {
   const [display, setDisplay] = useState(null)
   const prevTriggerRef = useRef(trigger)
 
@@ -42,6 +43,7 @@ function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal
       const elapsed = performance.now() - startTime
       if (elapsed >= totalMs) {
         setDisplay(realResult)
+        if (isPrimary) playSfx('reelTick')
         // Same deliberate rule as before: only fires on completion, so a result
         // from a previous spin stays buyable for the full duration of this one.
         onResult(realResult)
@@ -50,6 +52,7 @@ function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal
       const progress = elapsed / totalMs
       const interval = startMs + (endMs - startMs) * progress
       setDisplay(pullIngredient(ingredientsData, leverData.basePullChance, redBonus))
+      if (isPrimary) playSfx('reelTick')
       timeoutId = setTimeout(tick, interval)
     }
     tick()
@@ -160,6 +163,7 @@ export default function Lever({
               trigger={trigger}
               resetSignal={resetSignal}
               onResult={(result) => handleBoxResult(i, result)}
+              isPrimary={i === 0}
             />
             <div className="lever-buy-slot">
               {pulledResults[i] && (
