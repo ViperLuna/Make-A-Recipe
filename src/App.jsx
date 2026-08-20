@@ -23,6 +23,7 @@ import DiscoveryPopup from './components/DiscoveryPopup'
 import RebirthPanel from './components/RebirthPanel'
 import ActivePotions from './components/ActivePotions'
 import Inventory from './components/Inventory'
+import StartScreen from './components/StartScreen'
 import './App.css'
 
 const STARTING_CASH = 25
@@ -94,6 +95,7 @@ function migrateOldStoves(oldStoves) {
 }
 
 function App() {
+  const [started, setStarted] = useState(false)
   const { data, error } = useGameData()
   const [cash, setCash] = useState(STARTING_CASH)
   const [mechanismSlots, setMechanismSlots] = useState(INITIAL_MECHANISM_SLOTS)
@@ -331,6 +333,7 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [data, cash, rebirthCount])
 
+  if (!started) return <StartScreen onStart={() => setStarted(true)} />
   if (error) return <p>Failed to load game data: {error.message}</p>
   if (!data || !saveLoaded) return <p>Loading...</p>
 
