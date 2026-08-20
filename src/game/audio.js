@@ -1,3 +1,6 @@
+import reelTickUrl from '../assets/audio/reel-tick.mp3'
+import timerBellUrl from '../assets/audio/timer-bell.mp3'
+
 const STORAGE_KEYS = {
   musicVolume: 'mar-audio-music-volume',
   sfxVolume: 'mar-audio-sfx-volume',
@@ -8,13 +11,15 @@ const STORAGE_KEYS = {
 const DEFAULT_FADE_MS = 1200
 const SFX_POOL_SIZE = 4
 
-// Fill these in as tracks/sounds are added under public/audio/ - keys are
-// whatever name callers pass to playMusic/playSfx, values are paths relative
-// to BASE_URL (same convention as the logo in App.jsx/StartScreen.jsx).
+// Fill these in as tracks/sounds are added under src/assets/audio/ - import
+// the file above and add it here under whatever name callers pass to
+// playMusic/playSfx. Importing (rather than referencing public/) makes Vite
+// fingerprint the filename on build, so swapping a clip's contents later
+// always busts any cached copy instead of silently serving the old one.
 export const MUSIC = {}
 export const SFX = {
-  reelTick: 'audio/reel-tick.mp3',
-  timerBell: 'audio/timer-bell.mp3',
+  reelTick: reelTickUrl,
+  timerBell: timerBellUrl,
 }
 
 function readNumber(key, fallback) {
@@ -25,10 +30,6 @@ function readNumber(key, fallback) {
 function readBool(key, fallback) {
   const raw = localStorage.getItem(key)
   return raw === null ? fallback : raw === 'true'
-}
-
-function assetUrl(path) {
-  return `${import.meta.env.BASE_URL}${path}`
 }
 
 let musicVolume = readNumber(STORAGE_KEYS.musicVolume, 0.5)
@@ -47,8 +48,8 @@ const sfxPools = new Map() // name -> { elements: HTMLAudioElement[], next: numb
 export function unlockAudio() {
   if (unlocked) return
   unlocked = true
-  for (const path of [...Object.values(MUSIC), ...Object.values(SFX)]) {
-    const audio = new Audio(assetUrl(path))
+  for (const url of [...Object.values(MUSIC), ...Object.values(SFX)]) {
+    const audio = new Audio(url)
     audio.volume = 0
     audio.play().then(() => audio.pause()).catch(() => {})
   }
@@ -75,10 +76,10 @@ function fadeVolume(audio, target, durationMs, onDone) {
 // incoming track up while ramping any outgoing one down, so they overlap
 // instead of cutting.
 export function playMusic(name, { loop = true, fadeMs = DEFAULT_FADE_MS } = {}) {
-  const path = MUSIC[name]
-  if (!path || currentMusic?.name === name) return
+  const url = MUSIC[name]
+  if (!url || currentMusic?.name === name) return
 
-  const incoming = new Audio(assetUrl(path))
+  const incoming = new Audio(url)
   incoming.loop = loop
   incoming.volume = 0
   incoming.play().catch(() => {})
@@ -101,10 +102,10 @@ export function stopMusic({ fadeMs = DEFAULT_FADE_MS } = {}) {
 function getPool(name) {
   let pool = sfxPools.get(name)
   if (pool) return pool
-  const path = SFX[name]
-  if (!path) return null
+  const url = SFX[name]
+  if (!url) return null
   pool = {
-    elements: Array.from({ length: SFX_POOL_SIZE }, () => new Audio(assetUrl(path))),
+    elements: Array.from({ length: SFX_POOL_SIZE }, () => new Audio(url)),
     next: 0,
   }
   sfxPools.set(name, pool)
