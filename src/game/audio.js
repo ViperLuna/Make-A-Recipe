@@ -12,7 +12,9 @@ const SFX_POOL_SIZE = 4
 // whatever name callers pass to playMusic/playSfx, values are paths relative
 // to BASE_URL (same convention as the logo in App.jsx/StartScreen.jsx).
 export const MUSIC = {}
-export const SFX = {}
+export const SFX = {
+  reelTick: 'audio/reel-tick.mp3',
+}
 
 function readNumber(key, fallback) {
   const n = Number(localStorage.getItem(key))
