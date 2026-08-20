@@ -10,6 +10,7 @@ import { rebirthCost, sellValueMultiplier } from './game/rebirth'
 import { computeReadyDish } from './game/dish'
 import { rollCrate } from './game/bulkCrate'
 import { getShopStock, ROTATION_MS } from './game/shop'
+import { playSfx } from './game/audio'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
@@ -464,23 +465,26 @@ function App() {
   }
 
   function startCooking(stoveId) {
+    const slot = gridSlots.find((s) => s.id === stoveId)
+    if (!slot?.stove || slot.stove.contents.length === 0 || slot.stove.cookCompleteAt) return
+
+    playSfx('stoveStart')
     const speedPotion =
       activePotions.speed && activePotions.speed.expiresAt > Date.now() ? activePotions.speed : null
     const speedMultiplier = speedPotion
       ? data.potions.speedPotions[speedPotion.rank - 1].cookSpeedMultiplier
       : 1
+    const seconds =
+      totalCookSeconds(
+        slot.stove.contents.map((i) => i.tier),
+        slot.stove.tier
+      ) / speedMultiplier
+    const mutation = rollMutation(data.mutationOdds, data.mutations)
 
     setGridSlots((prev) =>
-      prev.map((s) => {
-        if (s.id !== stoveId || !s.stove || s.stove.contents.length === 0 || s.stove.cookCompleteAt) return s
-        const seconds =
-          totalCookSeconds(
-            s.stove.contents.map((i) => i.tier),
-            s.stove.tier
-          ) / speedMultiplier
-        const mutation = rollMutation(data.mutationOdds, data.mutations)
-        return { ...s, stove: { ...s.stove, cookCompleteAt: Date.now() + seconds * 1000, mutation } }
-      })
+      prev.map((s) =>
+        s.id === stoveId ? { ...s, stove: { ...s.stove, cookCompleteAt: Date.now() + seconds * 1000, mutation } } : s
+      )
     )
   }
 
