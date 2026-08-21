@@ -25,6 +25,7 @@ import RebirthPanel from './components/RebirthPanel'
 import ActivePotions from './components/ActivePotions'
 import Inventory from './components/Inventory'
 import StartScreen from './components/StartScreen'
+import SettingsPanel from './components/SettingsPanel'
 import './App.css'
 
 const STARTING_CASH = 25
@@ -137,6 +138,7 @@ function App() {
   const [stoveStockPurchased, setStoveStockPurchased] = useState({})
   const [stoveStockBucket, setStoveStockBucket] = useState(0)
   const [backupOpen, setBackupOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Shared by the startup load and by importing a backup file, so the two
   // paths can't drift apart on what each field defaults to.
@@ -664,6 +666,10 @@ function App() {
 
   return (
     <div className="game">
+      <button className="settings-btn" onClick={() => setSettingsOpen((o) => !o)} aria-label="Settings">
+        ⚙
+      </button>
+
       <img
         src={`${import.meta.env.BASE_URL}logo.webp`}
         alt="Make A Recipe"
@@ -725,6 +731,8 @@ function App() {
           {backupOpen ? 'Close Backup' : 'Open Backup'}
         </button>
       </div>
+
+      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
 
       {dexOpen && (
         <Dex dex={dex} totalPossible={totalPossibleDishes} onClose={() => setDexOpen(false)} />
