@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
+import { playSfx } from '../game/audio'
 
 // Auto-dismisses after 5s, or on OK, or on Enter.
 export default function DiscoveryPopup({ popup, onClose }) {
   useEffect(() => {
+    playSfx('discovery')
     const id = setTimeout(onClose, 5000)
     return () => clearTimeout(id)
   }, [popup, onClose])
