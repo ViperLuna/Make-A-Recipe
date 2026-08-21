@@ -35,6 +35,14 @@ export default function Stove({
   const isFillable = isEditable && stove.contents.length < stove.maxSlots
   const canStart = isEditable && stove.contents.length > 0
 
+  // Only computable when cookStartedAt was actually recorded (a save from
+  // before this field existed, resumed mid-cook, won't have it) - in that
+  // case just skip the bar entirely rather than guess a start time and show
+  // a misleading fill amount.
+  const totalCookMs = stove.cookStartedAt ? stove.cookCompleteAt - stove.cookStartedAt : null
+  const showProgress = stove.cookCompleteAt && totalCookMs > 0
+  const progress = isDone ? 1 : showProgress ? Math.min(1, (totalCookMs - remaining) / totalCookMs) : 0
+
   // Only rings for a completion witnessed live (isCooking observed before
   // isDone) - otherwise reloading the page onto an already-finished stove
   // (cookCompleteAt restored from a save, remaining computed as 0 on the
@@ -97,6 +105,12 @@ export default function Stove({
       </ul>
 
       {isCooking && <p>Cooking... {(remaining / 1000).toFixed(1)}s left</p>}
+
+      {showProgress && (
+        <div className="cook-progress">
+          <div className="cook-progress-fill" style={{ width: `${progress * 100}%` }} />
+        </div>
+      )}
 
       {canStart && (
         <button

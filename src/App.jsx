@@ -67,7 +67,15 @@ const INITIAL_GRID_SLOTS = Array.from({ length: TOTAL_GRID_SLOTS }, (_, i) => ({
   unlocked: i === 0,
   stove:
     i === 0
-      ? { name: 'Basic Stove', tier: 'white', maxSlots: 1, contents: [], cookCompleteAt: null, mutation: null }
+      ? {
+          name: 'Basic Stove',
+          tier: 'white',
+          maxSlots: 1,
+          contents: [],
+          cookCompleteAt: null,
+          cookStartedAt: null,
+          mutation: null,
+        }
       : null,
 }))
 
@@ -87,6 +95,10 @@ function migrateOldStoves(oldStoves) {
           maxSlots: s.maxSlots,
           contents: s.contents,
           cookCompleteAt: s.cookCompleteAt,
+          // Pre-progress-bar saves won't have this field either - a stove
+          // already cooking when this shipped just won't show a bar until
+          // its next cook, rather than guessing a start time.
+          cookStartedAt: s.cookStartedAt ?? null,
           mutation: s.mutation ?? null,
         },
       }
@@ -480,10 +492,13 @@ function App() {
         slot.stove.tier
       ) / speedMultiplier
     const mutation = rollMutation(data.mutationOdds, data.mutations)
+    const startedAt = Date.now()
 
     setGridSlots((prev) =>
       prev.map((s) =>
-        s.id === stoveId ? { ...s, stove: { ...s.stove, cookCompleteAt: Date.now() + seconds * 1000, mutation } } : s
+        s.id === stoveId
+          ? { ...s, stove: { ...s.stove, cookStartedAt: startedAt, cookCompleteAt: startedAt + seconds * 1000, mutation } }
+          : s
       )
     )
   }
@@ -494,7 +509,7 @@ function App() {
     setGridSlots((prev) =>
       prev.map((s) =>
         s.id === stoveId
-          ? { ...s, stove: { ...s.stove, contents: [], cookCompleteAt: null, mutation: null } }
+          ? { ...s, stove: { ...s.stove, contents: [], cookStartedAt: null, cookCompleteAt: null, mutation: null } }
           : s
       )
     )
@@ -566,6 +581,7 @@ function App() {
                 tier: stoveDef.tier,
                 maxSlots: stoveDef.slotCount,
                 contents: [],
+                cookStartedAt: null,
                 cookCompleteAt: null,
                 mutation: null,
               },
