@@ -1,6 +1,7 @@
 import reelTickUrl from '../assets/audio/reel-tick.mp3'
 import timerBellUrl from '../assets/audio/timer-bell.mp3'
 import stoveStartUrl from '../assets/audio/stove-start.mp3'
+import sellChingUrl from '../assets/audio/sell-ching.mp3'
 
 const STORAGE_KEYS = {
   musicVolume: 'mar-audio-music-volume',
@@ -22,6 +23,7 @@ export const SFX = {
   reelTick: reelTickUrl,
   timerBell: timerBellUrl,
   stoveStart: stoveStartUrl,
+  sellChing: sellChingUrl,
 }
 
 function readNumber(key, fallback) {

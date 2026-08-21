@@ -489,6 +489,7 @@ function App() {
   }
 
   function serveStove(stoveId, value, dishInfo) {
+    playSfx('sellChing')
     setCash((c) => c + value)
     setGridSlots((prev) =>
       prev.map((s) =>
