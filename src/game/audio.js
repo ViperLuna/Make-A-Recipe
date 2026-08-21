@@ -3,6 +3,11 @@ import timerBellUrl from '../assets/audio/timer-bell.mp3'
 import stoveStartUrl from '../assets/audio/stove-start.mp3'
 import sellChingUrl from '../assets/audio/sell-ching.mp3'
 import discoveryUrl from '../assets/audio/discovery.mp3'
+import cherryReelUrl from '../assets/audio/cherry-reel.mp3'
+import velvetSpinnerUrl from '../assets/audio/velvet-spinner.mp3'
+import hotOffTheStoveUrl from '../assets/audio/hot-off-the-stove.mp3'
+import getCookinUrl from '../assets/audio/get-cookin.mp3'
+import keepEmComingUrl from '../assets/audio/keep-em-coming.mp3'
 
 const STORAGE_KEYS = {
   musicVolume: 'mar-audio-music-volume',
@@ -21,7 +26,13 @@ const SFX_POOL_SIZE = 4
 // always busts any cached copy instead of silently serving the old one.
 // MUSIC keys double as the "now playing" label shown in the settings panel
 // (see getCurrentMusicName) - name them close to the track's actual title.
-export const MUSIC = {}
+export const MUSIC = {
+  'Cherry Reel': cherryReelUrl,
+  'Velvet Spinner': velvetSpinnerUrl,
+  'Hot Off The Stove': hotOffTheStoveUrl,
+  'Get Cookin': getCookinUrl,
+  "Keep 'Em Coming": keepEmComingUrl,
+}
 export const SFX = {
   reelTick: reelTickUrl,
   timerBell: timerBellUrl,
