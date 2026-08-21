@@ -8,6 +8,10 @@ import velvetSpinnerUrl from '../assets/audio/velvet-spinner.mp3'
 import hotOffTheStoveUrl from '../assets/audio/hot-off-the-stove.mp3'
 import getCookinUrl from '../assets/audio/get-cookin.mp3'
 import keepEmComingUrl from '../assets/audio/keep-em-coming.mp3'
+import bounceOffTheReelsUrl from '../assets/audio/bounce-off-the-reels.mp3'
+import orderUpUrl from '../assets/audio/order-up.mp3'
+import crazyLuckUrl from '../assets/audio/crazy-luck.mp3'
+import onARollUrl from '../assets/audio/on-a-roll.mp3'
 
 const STORAGE_KEYS = {
   musicVolume: 'mar-audio-music-volume',
@@ -32,6 +36,10 @@ export const MUSIC = {
   'Hot Off The Stove': hotOffTheStoveUrl,
   'Get Cookin': getCookinUrl,
   "Keep 'Em Coming": keepEmComingUrl,
+  'Bounce Off The Reels': bounceOffTheReelsUrl,
+  'Order Up': orderUpUrl,
+  'Crazy Luck': crazyLuckUrl,
+  'On A Roll': onARollUrl,
 }
 export const SFX = {
   reelTick: reelTickUrl,
