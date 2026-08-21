@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { computeReadyDish } from '../game/dish'
 import { formatMoney } from '../game/format'
 import { playSfx } from '../game/audio'
@@ -18,16 +18,17 @@ export default function Stove({
   const [remaining, setRemaining] = useState(null)
   const [confirmingRemoveStove, setConfirmingRemoveStove] = useState(false)
 
-  useEffect(() => {
+  // useLayoutEffect, not useEffect: a plain effect runs after the browser
+  // has already painted, so the render where cookCompleteAt just became
+  // truthy but remaining hadn't been reseeded yet (still null, coerced to 0
+  // in the progress-bar math) got painted as a real frame - a brief full-bar
+  // flash - before the correction landed on the next one. Layout effects run
+  // synchronously before paint, so that stale frame is never shown at all.
+  useLayoutEffect(() => {
     if (!stove.cookCompleteAt) {
       setRemaining(null)
       return
     }
-    // Seed synchronously rather than waiting on the interval's first tick -
-    // setInterval doesn't fire until 100ms in, and remaining staying null
-    // until then got coerced to 0 in the progress-bar math, briefly showing
-    // a full bar (as if the whole duration had already elapsed) right as
-    // cooking starts.
     setRemaining(Math.max(0, stove.cookCompleteAt - Date.now()))
     const id = setInterval(() => {
       setRemaining(Math.max(0, stove.cookCompleteAt - Date.now()))
