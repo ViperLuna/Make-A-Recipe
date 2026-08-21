@@ -48,13 +48,19 @@ let currentMusic = null // { name, audio }
 const sfxPools = new Map() // name -> { elements: HTMLAudioElement[], next: number }
 
 // Browsers refuse to start any audio before a user gesture. Call this from
-// inside the gesture handler itself (see StartScreen) - priming each element
-// with a muted play+pause right there is what lets later programmatic
-// play() calls succeed on strict mobile browsers, not just an unlock flag.
+// inside the gesture handler itself (see StartScreen) - priming each SFX
+// element with a muted play+pause right there is what lets its later
+// programmatic play() calls succeed on strict mobile browsers, not just an
+// unlock flag. Music is deliberately NOT primed here: with a music library
+// that can grow to several tracks, priming every one up front would fetch
+// all of them on the Start click regardless of whether they're ever played.
+// Instead, startMusicPlaylist() is called from that same click - its first
+// track's play() is itself inside the gesture, so it needs no separate
+// priming, and every later track only fetches once its turn comes up.
 export function unlockAudio() {
   if (unlocked) return
   unlocked = true
-  for (const url of [...Object.values(MUSIC), ...Object.values(SFX)]) {
+  for (const url of Object.values(SFX)) {
     const audio = new Audio(url)
     audio.volume = 0
     audio.play().then(() => audio.pause()).catch(() => {})
@@ -78,22 +84,25 @@ function fadeVolume(audio, target, durationMs, onDone) {
   requestAnimationFrame(step)
 }
 
-// Crossfades into the named track if it isn't already playing: ramps the
-// incoming track up while ramping any outgoing one down, so they overlap
-// instead of cutting.
-export function playMusic(name, { loop = true, fadeMs = DEFAULT_FADE_MS } = {}) {
-  const url = MUSIC[name]
-  if (!url || currentMusic?.name === name) return
-
-  const incoming = new Audio(url)
-  incoming.loop = loop
+// Starts `incoming` playing and ramps it up while ramping out whatever was
+// playing before, so the two overlap instead of cutting. Shared by playMusic
+// (an explicit single track) and the shuffled playlist below.
+function crossfadeTo(name, incoming, fadeMs) {
   incoming.volume = 0
   incoming.play().catch(() => {})
-
   const outgoing = currentMusic
   currentMusic = { name, audio: incoming }
   fadeVolume(incoming, musicMuted ? 0 : musicVolume, fadeMs)
   if (outgoing) fadeVolume(outgoing.audio, 0, fadeMs, () => outgoing.audio.pause())
+}
+
+// Crossfades into the named track if it isn't already playing.
+export function playMusic(name, { loop = true, fadeMs = DEFAULT_FADE_MS } = {}) {
+  const url = MUSIC[name]
+  if (!url || currentMusic?.name === name) return
+  const incoming = new Audio(url)
+  incoming.loop = loop
+  crossfadeTo(name, incoming, fadeMs)
 }
 
 export function stopMusic({ fadeMs = DEFAULT_FADE_MS } = {}) {
@@ -101,6 +110,59 @@ export function stopMusic({ fadeMs = DEFAULT_FADE_MS } = {}) {
   const { audio } = currentMusic
   currentMusic = null
   fadeVolume(audio, 0, fadeMs, () => audio.pause())
+}
+
+// Shuffled, no-repeat-within-a-cycle playlist across every track in MUSIC,
+// crossfading from one into the next as each ends and reshuffling for a
+// fresh order once the whole set has played. Call once, from the same
+// user-gesture handler as unlockAudio() - see the comment there.
+let playlistQueue = []
+let playlistLastName = null
+
+function refillPlaylistQueue() {
+  const shuffled = Object.keys(MUSIC)
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  // Without this, a reshuffle could land the track that just finished right
+  // back at the front, playing it again immediately across the boundary.
+  if (playlistLastName && shuffled.length > 1 && shuffled[0] === playlistLastName) {
+    ;[shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]]
+  }
+  playlistQueue = shuffled
+}
+
+// Crossfading into the next track needs to start a bit before this one
+// actually ends, not after - so schedule it off the track's own duration
+// once known, and only fall back to the (gapless-cut, no overlap) `ended`
+// event if that duration is never available.
+function scheduleNextPlaylistTrack(audio) {
+  function schedule() {
+    const durationMs = Number.isFinite(audio.duration) ? audio.duration * 1000 : null
+    if (durationMs) {
+      setTimeout(advancePlaylistTrack, Math.max(0, durationMs - DEFAULT_FADE_MS))
+    } else {
+      audio.addEventListener('ended', advancePlaylistTrack, { once: true })
+    }
+  }
+  if (audio.readyState >= 1) schedule()
+  else audio.addEventListener('loadedmetadata', schedule, { once: true })
+}
+
+function advancePlaylistTrack() {
+  if (playlistQueue.length === 0) refillPlaylistQueue()
+  const name = playlistQueue.shift()
+  playlistLastName = name
+  const incoming = new Audio(MUSIC[name])
+  scheduleNextPlaylistTrack(incoming)
+  crossfadeTo(name, incoming, DEFAULT_FADE_MS)
+}
+
+export function startMusicPlaylist() {
+  if (Object.keys(MUSIC).length === 0) return
+  refillPlaylistQueue()
+  advancePlaylistTrack()
 }
 
 // A small round-robin pool per sound lets the same SFX retrigger rapidly
