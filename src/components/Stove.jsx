@@ -23,6 +23,12 @@ export default function Stove({
       setRemaining(null)
       return
     }
+    // Seed synchronously rather than waiting on the interval's first tick -
+    // setInterval doesn't fire until 100ms in, and remaining staying null
+    // until then got coerced to 0 in the progress-bar math, briefly showing
+    // a full bar (as if the whole duration had already elapsed) right as
+    // cooking starts.
+    setRemaining(Math.max(0, stove.cookCompleteAt - Date.now()))
     const id = setInterval(() => {
       setRemaining(Math.max(0, stove.cookCompleteAt - Date.now()))
     }, 100)
