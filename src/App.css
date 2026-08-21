@@ -220,6 +220,20 @@
   padding: 0.05rem 0.25rem;
 }
 
+.cook-progress {
+  height: 4px;
+  background: #000;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.3rem 0;
+}
+
+.cook-progress-fill {
+  height: 100%;
+  background: #d4af37;
+  transition: width 0.1s linear;
+}
+
 .mutation-tag {
   font-weight: bold;
   color: #f5923e;
