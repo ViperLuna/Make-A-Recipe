@@ -30,6 +30,16 @@ import './App.css'
 
 const STARTING_CASH = 25
 
+// The price of a Carrot, the cheapest ingredient (see ingredients.json).
+// Every cash-decreasing action floors at this rather than letting cash
+// drop below it, so there's always at least one thing left to buy and
+// start earning from again - without it, buying something that isn't
+// itself sellable (a mitt, a potion, a mechanism slot, ...) down to under
+// $2 with nothing in inventory or any stove would be a permanent dead end:
+// rebirth costs $500+ and the cheapest bulk crate costs millions, neither
+// remotely reachable from there.
+const MIN_CASH = 2
+
 // Keeps the inventory list well within where an unvirtualized render would
 // start to feel sluggish on weaker devices, while staying generous enough
 // never to interrupt a mass-buy-then-mass-cook session.
@@ -143,7 +153,9 @@ function App() {
   // Shared by the startup load and by importing a backup file, so the two
   // paths can't drift apart on what each field defaults to.
   function applySavedState(saved) {
-    setCash(saved.cash)
+    // Floors an already-stuck save (below MIN_CASH from before this existed)
+    // right back up on load, not just future spends.
+    setCash(Math.max(MIN_CASH, saved.cash))
     setInventory(saved.inventory)
     setGridSlots(saved.gridSlots ?? migrateOldStoves(saved.stoves ?? []))
     // Pre-mechanism-slot saves won't have this field - default to just slot 1 unlocked.
@@ -373,10 +385,14 @@ function App() {
     setPulledResults((prev) => prev.map((r, i) => (i === index ? result : r)))
   }
 
+  function spendCash(amount) {
+    setCash((c) => Math.max(MIN_CASH, c - amount))
+  }
+
   function buyPulledAt(index) {
     const item = pulledResults[index]
     if (!item || cash < item.price || inventory.length >= MAX_INVENTORY) return
-    setCash((c) => c - item.price)
+    spendCash(item.price)
     setInventory((inv) => [...inv, item])
     setPulledResults((prev) => prev.map((r, i) => (i === index ? null : r)))
   }
@@ -399,7 +415,7 @@ function App() {
       }
     })
     if (boughtItems.length === 0) return
-    setCash(remainingCash)
+    setCash(Math.max(MIN_CASH, remainingCash))
     setInventory((inv) => [...inv, ...boughtItems])
     setPulledResults((prev) => prev.map((r, i) => (boughtIndices.includes(i) ? null : r)))
   }
@@ -407,20 +423,20 @@ function App() {
   function buyBulkCrate(crate) {
     if (cash < crate.price || inventory.length + crate.pullCount > MAX_INVENTORY) return
     const items = rollCrate(crate.pullCount, data.ingredients, data.lever.basePullChance, redBonus)
-    setCash((c) => c - crate.price)
+    spendCash(crate.price)
     setInventory((inv) => [...inv, ...items])
   }
 
   function buyMitt(mitt) {
     const isDowngrade = equippedMittTier != null && TIER_INDEX[mitt.tier] < TIER_INDEX[equippedMittTier]
     if (cash < mitt.price || mitt.tier === equippedMittTier || isDowngrade) return
-    setCash((c) => c - mitt.price)
+    spendCash(mitt.price)
     setEquippedMittTier(mitt.tier)
   }
 
   function buyLuckPotion(potion) {
     if (cash < potion.price) return
-    setCash((c) => c - potion.price)
+    spendCash(potion.price)
     setActivePotions((prev) => {
       const remainingMs = prev.luck && prev.luck.expiresAt > Date.now() ? prev.luck.expiresAt - Date.now() : 0
       return {
@@ -432,7 +448,7 @@ function App() {
 
   function buySpeedPotion(potion) {
     if (cash < potion.price) return
-    setCash((c) => c - potion.price)
+    spendCash(potion.price)
     setActivePotions((prev) => {
       const remainingMs = prev.speed && prev.speed.expiresAt > Date.now() ? prev.speed.expiresAt - Date.now() : 0
       return {
@@ -447,7 +463,7 @@ function App() {
     if (index !== unlockedCount) return // must unlock in order
     const cost = data.lever.mechanismSlots[`slot${index + 1}`]?.cost
     if (cost == null || cash < cost) return
-    setCash((c) => c - cost)
+    spendCash(cost)
     setMechanismSlots((prev) => prev.map((u, i) => (i === index ? true : u)))
   }
 
@@ -596,7 +612,7 @@ function App() {
   function unlockSlot(slotId) {
     const cost = data.stoveGrid.slots[slotId]?.cost
     if (cost == null || cash < cost) return
-    setCash((c) => c - cost)
+    spendCash(cost)
     setGridSlots((prev) => prev.map((s) => (s.id === slotId ? { ...s, unlocked: true } : s)))
   }
 
@@ -615,7 +631,7 @@ function App() {
     const purchasedSoFar = bucket === stoveStockBucket ? (stoveStockPurchased[stoveDef.name] ?? 0) : 0
     if (purchasedSoFar >= listing.quantity) return
 
-    setCash((c) => c - stoveDef.price)
+    spendCash(stoveDef.price)
     setGridSlots((prev) =>
       prev.map((s) =>
         s.id === target.id
