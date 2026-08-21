@@ -59,7 +59,7 @@ function readBool(key, fallback) {
   return raw === null ? fallback : raw === 'true'
 }
 
-let musicVolume = readNumber(STORAGE_KEYS.musicVolume, 0.5)
+let musicVolume = readNumber(STORAGE_KEYS.musicVolume, 0.3)
 let sfxVolume = readNumber(STORAGE_KEYS.sfxVolume, 0.7)
 let musicMuted = readBool(STORAGE_KEYS.musicMuted, false)
 let sfxMuted = readBool(STORAGE_KEYS.sfxMuted, false)
