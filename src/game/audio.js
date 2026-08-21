@@ -19,6 +19,8 @@ const SFX_POOL_SIZE = 4
 // playMusic/playSfx. Importing (rather than referencing public/) makes Vite
 // fingerprint the filename on build, so swapping a clip's contents later
 // always busts any cached copy instead of silently serving the old one.
+// MUSIC keys double as the "now playing" label shown in the settings panel
+// (see getCurrentMusicName) - name them close to the track's actual title.
 export const MUSIC = {}
 export const SFX = {
   reelTick: reelTickUrl,
@@ -114,10 +116,18 @@ export function stopMusic({ fadeMs = DEFAULT_FADE_MS } = {}) {
 
 // Shuffled, no-repeat-within-a-cycle playlist across every track in MUSIC,
 // crossfading from one into the next as each ends and reshuffling for a
-// fresh order once the whole set has played. Call once, from the same
-// user-gesture handler as unlockAudio() - see the comment there.
+// fresh order once the whole set has played. Call startMusicPlaylist once,
+// from the same user-gesture handler as unlockAudio() - see the comment
+// there. skipToNextTrack/playPreviousTrack (for a settings-menu transport
+// control) walk a played-order history rather than the shuffle queue
+// directly, so "previous" replays what actually played, not a re-shuffle.
 let playlistQueue = []
-let playlistLastName = null
+let history = []
+let historyPos = -1
+// Bumped on every track change (natural advance, skip, or previous) so a
+// stale scheduled advance from a track that got skipped past can recognize
+// it's no longer current and no-op, instead of double-advancing later.
+let playlistGeneration = 0
 
 function refillPlaylistQueue() {
   const shuffled = Object.keys(MUSIC)
@@ -127,7 +137,8 @@ function refillPlaylistQueue() {
   }
   // Without this, a reshuffle could land the track that just finished right
   // back at the front, playing it again immediately across the boundary.
-  if (playlistLastName && shuffled.length > 1 && shuffled[0] === playlistLastName) {
+  const lastPlayed = historyPos >= 0 ? history[historyPos] : null
+  if (lastPlayed && shuffled.length > 1 && shuffled[0] === lastPlayed) {
     ;[shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]]
   }
   playlistQueue = shuffled
@@ -137,32 +148,69 @@ function refillPlaylistQueue() {
 // actually ends, not after - so schedule it off the track's own duration
 // once known, and only fall back to the (gapless-cut, no overlap) `ended`
 // event if that duration is never available.
-function scheduleNextPlaylistTrack(audio) {
+function scheduleNextPlaylistTrack(audio, generation) {
   function schedule() {
+    if (generation !== playlistGeneration) return
     const durationMs = Number.isFinite(audio.duration) ? audio.duration * 1000 : null
+    const fireAdvance = () => {
+      if (generation === playlistGeneration) advancePlaylistTrack()
+    }
     if (durationMs) {
-      setTimeout(advancePlaylistTrack, Math.max(0, durationMs - DEFAULT_FADE_MS))
+      setTimeout(fireAdvance, Math.max(0, durationMs - DEFAULT_FADE_MS))
     } else {
-      audio.addEventListener('ended', advancePlaylistTrack, { once: true })
+      audio.addEventListener('ended', fireAdvance, { once: true })
     }
   }
   if (audio.readyState >= 1) schedule()
   else audio.addEventListener('loadedmetadata', schedule, { once: true })
 }
 
-function advancePlaylistTrack() {
-  if (playlistQueue.length === 0) refillPlaylistQueue()
-  const name = playlistQueue.shift()
-  playlistLastName = name
+function playHistoryEntry(name) {
+  playlistGeneration++
   const incoming = new Audio(MUSIC[name])
-  scheduleNextPlaylistTrack(incoming)
+  scheduleNextPlaylistTrack(incoming, playlistGeneration)
   crossfadeTo(name, incoming, DEFAULT_FADE_MS)
 }
 
+// Moves forward: replays whatever's already ahead in history first (from a
+// previous playPreviousTrack call), otherwise pulls a new track off the
+// shuffle queue and appends it.
+function advancePlaylistTrack() {
+  if (historyPos < history.length - 1) {
+    historyPos++
+  } else {
+    if (playlistQueue.length === 0) refillPlaylistQueue()
+    history.push(playlistQueue.shift())
+    historyPos = history.length - 1
+  }
+  playHistoryEntry(history[historyPos])
+}
+
 export function startMusicPlaylist() {
-  if (Object.keys(MUSIC).length === 0) return
-  refillPlaylistQueue()
+  if (Object.keys(MUSIC).length === 0 || history.length > 0) return
   advancePlaylistTrack()
+}
+
+export function skipToNextTrack() {
+  if (Object.keys(MUSIC).length === 0) return
+  advancePlaylistTrack()
+}
+
+export function playPreviousTrack() {
+  if (historyPos <= 0) return
+  historyPos--
+  playHistoryEntry(history[historyPos])
+}
+
+// The currently playing track's MUSIC key - by convention, name entries
+// close to their source filename (see the comment on MUSIC) so this can be
+// shown directly as a "now playing" label.
+export function getCurrentMusicName() {
+  return currentMusic?.name ?? null
+}
+
+export function hasPreviousTrack() {
+  return historyPos > 0
 }
 
 // A small round-robin pool per sound lets the same SFX retrigger rapidly
