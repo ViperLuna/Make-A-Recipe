@@ -193,6 +193,10 @@ export default function Lever({
             min="0"
             value={autoPullThreshold}
             onChange={(e) => setAutoPullThreshold(e.target.value)}
+            onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.target.blur()
+            }}
           />
         )}
       </div>
