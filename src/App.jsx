@@ -225,11 +225,14 @@ function App() {
     return totalPossibleCombos(data.ingredients.ingredients.length, maxComboSize)
   }, [data])
 
-  // Number-row hotkeys 1-9,0 act on the matching stove slot: while hovering an
-  // inventory item, they drop that ingredient into the stove; otherwise they
-  // sell it if it's done cooking, start cooking it if it's holding ingredients
-  // but idle, or just select it. A missing/locked slot, or an already-selected
-  // stove, is a no-op either way.
+  // Number-row hotkeys 1-9,0 act on the matching stove slot. Not hovering an
+  // inventory item: sell it if it's done cooking, start cooking it if it's
+  // holding ingredients but idle, or just select it. Hovering one: drop that
+  // ingredient into the stove instead - selling whatever's already done
+  // cooking there first in the same keystroke, or starting the cook instead
+  // if the stove is idle but already full, so a hovered ingredient never just
+  // silently fails to do anything because there's nowhere to put it. A
+  // missing/locked slot, or a stove still mid-cook, is a no-op either way.
   //
   // "Hovering" is checked live via :hover at keydown time, not via React
   // state updated through mouseenter/mouseleave - sorting or paging the
@@ -247,28 +250,37 @@ function App() {
       const slot = gridSlots[slotIndex]
       if (!slot?.unlocked || !slot.stove) return
 
-      const hoveredLi = document.querySelector('.inventory li:hover')
-      if (hoveredLi) {
-        addItemToStove(slot.id, Number(hoveredLi.dataset.inventoryIndex))
-        return
-      }
-
       const ready = computeReadyDish(
         slot.stove,
         wordMap,
         data.dishWordLists,
         sellValueMultiplier(rebirthCount, data.rebirth)
       )
+      const dishInfo = ready && {
+        dishName: ready.dishName,
+        comboEntries: ready.comboEntries,
+        ingredientNames: slot.stove.contents.map((i) => i.name),
+        mutation: slot.stove.mutation,
+      }
+
+      const hoveredLi = document.querySelector('.inventory li:hover')
+      const inventoryIndex = hoveredLi ? Number(hoveredLi.dataset.inventoryIndex) : null
+      const isFillable = !slot.stove.cookCompleteAt && slot.stove.contents.length < slot.stove.maxSlots
+
       if (ready) {
-        serveStove(slot.id, ready.value, {
-          dishName: ready.dishName,
-          comboEntries: ready.comboEntries,
-          ingredientNames: slot.stove.contents.map((i) => i.name),
-          mutation: slot.stove.mutation,
-        })
+        if (inventoryIndex != null) {
+          sellAndAddToStove(slot.id, inventoryIndex, ready.value, dishInfo)
+        } else {
+          serveStove(slot.id, ready.value, dishInfo)
+        }
+      } else if (inventoryIndex != null && isFillable) {
+        addItemToStove(slot.id, inventoryIndex)
       } else if (!slot.stove.cookCompleteAt && slot.stove.contents.length > 0) {
+        // Covers both the non-hover fallback and hovering a stove that's
+        // already full and idle - a hovered ingredient that has nowhere to
+        // go starts the cook instead of just silently doing nothing.
         startCooking(slot.id)
-      } else {
+      } else if (inventoryIndex == null) {
         toggleSelectStove(slot.id)
       }
     }
@@ -503,17 +515,10 @@ function App() {
     )
   }
 
-  function serveStove(stoveId, value, dishInfo) {
-    playSfx('sellChing')
-    setCash((c) => c + value)
-    setGridSlots((prev) =>
-      prev.map((s) =>
-        s.id === stoveId
-          ? { ...s, stove: { ...s.stove, contents: [], cookStartedAt: null, cookCompleteAt: null, mutation: null } }
-          : s
-      )
-    )
-
+  // Shared by serveStove and sellAndAddToStove - the dex/discovery bookkeeping
+  // for selling a dish is identical either way, only what happens to the
+  // stove's contents afterward differs.
+  function recordDishInDex(dishInfo) {
     const key = comboKeyOf(dishInfo.comboEntries)
     const existing = dex[key]
     const mutationName = dishInfo.mutation?.name ?? null
@@ -536,6 +541,44 @@ function App() {
       }))
       setDiscoveryPopup({ kind: 'mutation', name: mutationName, dishName: dishInfo.dishName })
     }
+  }
+
+  function serveStove(stoveId, value, dishInfo) {
+    playSfx('sellChing')
+    setCash((c) => c + value)
+    setGridSlots((prev) =>
+      prev.map((s) =>
+        s.id === stoveId
+          ? { ...s, stove: { ...s.stove, contents: [], cookStartedAt: null, cookCompleteAt: null, mutation: null } }
+          : s
+      )
+    )
+    recordDishInDex(dishInfo)
+  }
+
+  // Sells whatever's done cooking in a stove and drops a new ingredient in
+  // immediately after, in one keystroke - the hotkey-while-hovering case
+  // where a stove is sitting on a finished dish. Composed as a single
+  // function (rather than calling serveStove then addItemToStove back to
+  // back) because both of those read gridSlots/inventory from the same
+  // stale render closure - a second call right after the first wouldn't see
+  // the first's update yet, so addItemToStove's own cookCompleteAt guard
+  // would still see the stove as "done" and refuse to add anything.
+  function sellAndAddToStove(stoveId, inventoryIndex, value, dishInfo) {
+    const item = inventory[inventoryIndex]
+    if (!item) return
+
+    playSfx('sellChing')
+    setCash((c) => c + value)
+    setInventory((inv) => inv.filter((_, i) => i !== inventoryIndex))
+    setGridSlots((prev) =>
+      prev.map((s) =>
+        s.id === stoveId
+          ? { ...s, stove: { ...s.stove, contents: [item], cookStartedAt: null, cookCompleteAt: null, mutation: null } }
+          : s
+      )
+    )
+    recordDishInDex(dishInfo)
   }
 
   function removeStove(stoveId) {
