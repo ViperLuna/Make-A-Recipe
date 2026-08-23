@@ -667,6 +667,12 @@ function App() {
     setPulledResults(Array(TOTAL_MECHANISM_SLOTS).fill(null))
     setSelectedStoveId(null)
     setEquippedMittTier(null)
+    // Otherwise a stove bought right before rebirthing could leave its
+    // per-rotation stock exhausted even though the wipe above just took it
+    // away again - locking it out of the shop for the rest of that window
+    // despite owning none of it anymore.
+    setStoveStockPurchased({})
+    setStoveStockBucket(0)
     setRebirthCount((n) => n + 1)
     setRebirthOpen(false)
   }
