@@ -54,8 +54,9 @@ export default function StoveShop({
                 {Math.max(0, remaining)} in stock
               </span>
               <button
+                className={cash < stove.price || !hasEmptyUnlockedSlot || remaining <= 0 ? 'disabled-look' : ''}
                 onClick={() => onBuy(stove)}
-                disabled={cash < stove.price || !hasEmptyUnlockedSlot || remaining <= 0}
+                aria-disabled={cash < stove.price || !hasEmptyUnlockedSlot || remaining <= 0}
               >
                 {remaining <= 0 ? 'Sold out' : 'Buy'}
               </button>

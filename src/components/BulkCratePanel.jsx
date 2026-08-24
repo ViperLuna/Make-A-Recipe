@@ -17,7 +17,11 @@ export default function BulkCratePanel({ cratesData, cash, inventoryCount, maxIn
               <span className="shop-item-detail">
                 {crate.pullCount} pulls - {formatMoney(crate.price)}
               </span>
-              <button onClick={() => onBuy(crate)} disabled={disabled}>
+              <button
+                className={disabled ? 'disabled-look' : ''}
+                onClick={() => onBuy(crate)}
+                aria-disabled={disabled}
+              >
                 {wouldOverflow ? 'Not enough inventory space' : `Buy for ${formatMoney(crate.price)}`}
               </button>
             </li>

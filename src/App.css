@@ -430,6 +430,16 @@ button {
   cursor: pointer;
 }
 
+/* Used instead of the disabled attribute for buttons whose click handler
+   already no-ops safely on its own (see App.jsx call sites) - a genuinely
+   disabled button gets excluded from normal touch handling on some mobile
+   browsers, which can fall through to the OS's own tap-on-text behavior
+   (e.g. a search/lookup card) instead of just being inert. */
+button.disabled-look {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .toolbar {
   display: flex;
   gap: 0.5rem;

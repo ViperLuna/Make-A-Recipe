@@ -27,7 +27,11 @@ function PotionList({ title, potions, activePotion, cash, onBuy }) {
               {formatMoney(p.price)} - {p.durationMinutes.toFixed(2)} min -{' '}
               {p.redBonus != null ? `+${(p.redBonus * 100).toFixed(0)}% red` : `${p.cookSpeedMultiplier}x speed`}
             </span>
-            <button onClick={() => onBuy(p)} disabled={cash < p.price}>
+            <button
+              className={cash < p.price ? 'disabled-look' : ''}
+              onClick={() => onBuy(p)}
+              aria-disabled={cash < p.price}
+            >
               Buy
             </button>
           </li>
