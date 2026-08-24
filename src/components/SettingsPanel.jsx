@@ -104,7 +104,11 @@ export default function SettingsPanel({ onClose }) {
         <div className="settings-now-playing">
           <p className="hint">Now playing: {nowPlaying ?? 'nothing yet'}</p>
           <div className="settings-transport">
-            <button onClick={handlePrevious} disabled={!canGoBack}>
+            <button
+              className={!canGoBack ? 'disabled-look' : ''}
+              onClick={handlePrevious}
+              aria-disabled={!canGoBack}
+            >
               Previous
             </button>
             <button onClick={handleSkip}>Skip</button>

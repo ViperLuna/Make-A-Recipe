@@ -24,7 +24,11 @@ export default function StoveGrid({
           return (
             <div key={slot.id} className="stove-card locked">
               <h3>Locked</h3>
-              <button onClick={() => onUnlock(slot.id)} disabled={cash < cost}>
+              <button
+                className={cash < cost ? 'disabled-look' : ''}
+                onClick={() => onUnlock(slot.id)}
+                aria-disabled={cash < cost}
+              >
                 Unlock for {formatMoney(cost)}
               </button>
             </div>

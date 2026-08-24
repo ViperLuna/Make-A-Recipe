@@ -61,13 +61,21 @@ export default function Inventory({
 
       {totalPages > 1 && (
         <div className="pager">
-          <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+          <button
+            className={page === 0 ? 'disabled-look' : ''}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            aria-disabled={page === 0}
+          >
             Prev
           </button>
           <span>
             {page * PAGE_SIZE + 1}-{Math.min(sorted.length, (page + 1) * PAGE_SIZE)} of {sorted.length}
           </span>
-          <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+          <button
+            className={page >= totalPages - 1 ? 'disabled-look' : ''}
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            aria-disabled={page >= totalPages - 1}
+          >
             Next
           </button>
         </div>
@@ -81,7 +89,11 @@ export default function Inventory({
           <li key={index} data-inventory-index={index}>
             {item.name} ({formatMoney(item.price)})
             {selectedStove && (
-              <button onClick={() => onAdd(index)} disabled={!canAddToSelected}>
+              <button
+                className={!canAddToSelected ? 'disabled-look' : ''}
+                onClick={() => onAdd(index)}
+                aria-disabled={!canAddToSelected}
+              >
                 Add
               </button>
             )}

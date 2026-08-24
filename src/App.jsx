@@ -702,9 +702,9 @@ function App() {
       <ActivePotions activePotions={activePotions} potionsData={data.potions} />
 
       <button
-        className="rebirth-quick-btn"
+        className={`rebirth-quick-btn${!rebirthOpen && cash < rebirthPrice ? ' disabled-look' : ''}`}
         onClick={() => setRebirthOpen((o) => !o)}
-        disabled={!rebirthOpen && cash < rebirthPrice}
+        aria-disabled={!rebirthOpen && cash < rebirthPrice}
       >
         Rebirth {formatMoney(rebirthPrice)} (N)
       </button>
@@ -728,7 +728,11 @@ function App() {
           if (nextIndex >= TOTAL_MECHANISM_SLOTS) return null
           const cost = data.lever.mechanismSlots[`slot${nextIndex + 1}`]?.cost ?? 0
           return (
-            <button onClick={() => unlockMechanism(nextIndex)} disabled={cash < cost}>
+            <button
+              className={cash < cost ? 'disabled-look' : ''}
+              onClick={() => unlockMechanism(nextIndex)}
+              aria-disabled={cash < cost}
+            >
               Unlock lever mechanism {nextIndex + 1} for {formatMoney(cost)}
             </button>
           )
