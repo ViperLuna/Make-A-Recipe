@@ -39,6 +39,12 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
+  /* iOS Safari's "Look Up" callout on tap-and-hold text can still fire on a
+     disabled button even with user-select: none above - disabled controls
+     don't fully participate in the normal touch-event model, so the OS
+     falls back to its native text-interaction handling. This is the
+     separate WebKit property that actually suppresses that callout. */
+  -webkit-touch-callout: none;
 }
 
 img {
