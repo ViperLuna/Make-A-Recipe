@@ -43,7 +43,11 @@ export default function MittShop({ mittsData, shopData, luckData, cash, equipped
               <span className="shop-item-detail">
                 {formatMoney(mitt.price)} - +{(luckData.mittRedBonus[mitt.tier] * 100).toFixed(0)}% red chance
               </span>
-              <button onClick={() => onEquip(mitt)} disabled={cash < mitt.price || isEquipped || isDowngrade}>
+              <button
+                className={cash < mitt.price || isEquipped || isDowngrade ? 'disabled-look' : ''}
+                onClick={() => onEquip(mitt)}
+                aria-disabled={cash < mitt.price || isEquipped || isDowngrade}
+              >
                 {isEquipped ? 'Equipped' : isDowngrade ? 'Downgrade' : 'Buy & Equip'}
               </button>
             </li>

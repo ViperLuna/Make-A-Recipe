@@ -26,7 +26,11 @@ export default function RebirthPanel({ rebirthData, rebirthCount, cash, onRebirt
         </p>
 
         {!confirming ? (
-          <button onClick={() => setConfirming(true)} disabled={!canAfford}>
+          <button
+            className={!canAfford ? 'disabled-look' : ''}
+            onClick={() => setConfirming(true)}
+            aria-disabled={!canAfford}
+          >
             Rebirth for {formatMoney(cost)}
           </button>
         ) : (

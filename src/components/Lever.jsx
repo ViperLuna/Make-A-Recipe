@@ -167,7 +167,11 @@ export default function Lever({
             />
             <div className="lever-buy-slot">
               {pulledResults[i] && (
-                <button onClick={() => onBuy(i)} disabled={cash < pulledResults[i].price || inventoryFull}>
+                <button
+                  className={cash < pulledResults[i].price || inventoryFull ? 'disabled-look' : ''}
+                  onClick={() => onBuy(i)}
+                  aria-disabled={cash < pulledResults[i].price || inventoryFull}
+                >
                   {inventoryFull ? 'Inventory full' : `Buy for ${formatMoney(pulledResults[i].price)}`}
                 </button>
               )}
@@ -176,7 +180,7 @@ export default function Lever({
         ))}
       </div>
       <div className="lever-controls">
-        <button onClick={pull} disabled={spinning}>
+        <button className={spinning ? 'disabled-look' : ''} onClick={pull} aria-disabled={spinning}>
           {spinning ? 'Pulling...' : 'Pull Lever'}
         </button>
         <button

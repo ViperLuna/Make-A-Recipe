@@ -25,13 +25,21 @@ export default function Dex({ dex, totalPossible, onClose }) {
 
         {totalPages > 1 && (
           <div className="pager">
-            <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+            <button
+              className={page === 0 ? 'disabled-look' : ''}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              aria-disabled={page === 0}
+            >
               Prev
             </button>
             <span>
               {page * PAGE_SIZE + 1}-{Math.min(entries.length, (page + 1) * PAGE_SIZE)} of {entries.length}
             </span>
-            <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+            <button
+              className={page >= totalPages - 1 ? 'disabled-look' : ''}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              aria-disabled={page >= totalPages - 1}
+            >
               Next
             </button>
           </div>
