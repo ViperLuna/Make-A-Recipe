@@ -96,6 +96,7 @@ export default function Lever({
   // flicker interval), letting a held-down pull sneak in and cancel the
   // in-flight result before it ever reported.
   const resultsInRef = useRef(0)
+  const autoBuyMaxRef = useRef(null)
 
   function pull() {
     if (spinning) return
@@ -245,10 +246,11 @@ export default function Lever({
                 onChange={(e) => setAutoBuyMin(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.target.blur()
+                  if (e.key === 'Enter') autoBuyMaxRef.current?.focus()
                 }}
               />
               <input
+                ref={autoBuyMaxRef}
                 type="number"
                 className="auto-buy-threshold"
                 placeholder="Max price..."
