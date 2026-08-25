@@ -204,30 +204,28 @@ export default function Lever({
         <button className={spinning ? 'disabled-look' : ''} onClick={pull} aria-disabled={spinning}>
           {spinning ? 'Pulling...' : 'Pull Lever'}
         </button>
+        <button
+          className={`auto-pull-toggle${autoPull ? ' active' : ''}`}
+          onClick={() => setAutoPull((o) => !o)}
+        >
+          Auto Pull: {autoPull ? 'On' : 'Off'}
+        </button>
+        {autoPull && (
+          <input
+            type="number"
+            className="auto-pull-threshold"
+            placeholder="Stop at price..."
+            min="0"
+            value={autoPullThreshold}
+            onChange={(e) => setAutoPullThreshold(e.target.value)}
+            onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.target.blur()
+            }}
+          />
+        )}
       </div>
       <div className="lever-auto-controls">
-        <div className="auto-control-group">
-          <button
-            className={`auto-pull-toggle${autoPull ? ' active' : ''}`}
-            onClick={() => setAutoPull((o) => !o)}
-          >
-            Auto Pull: {autoPull ? 'On' : 'Off'}
-          </button>
-          {autoPull && (
-            <input
-              type="number"
-              className="auto-pull-threshold"
-              placeholder="Stop at price..."
-              min="0"
-              value={autoPullThreshold}
-              onChange={(e) => setAutoPullThreshold(e.target.value)}
-              onFocus={(e) => e.target.select()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.target.blur()
-              }}
-            />
-          )}
-        </div>
         <div className="auto-control-group">
           <button
             className={`auto-buy-toggle${autoBuy ? ' active' : ''}`}
