@@ -397,17 +397,24 @@ function App() {
     setPulledResults((prev) => prev.map((r, i) => (i === index ? null : r)))
   }
 
-  // Buys every affordable pulled result in one go. Runs its own affordability
-  // (and inventory-space) check against running totals rather than calling
+  // Buys every affordable pulled result in one go, optionally restricted to
+  // a [minPrice, maxPrice] range (either or both left null for no bound on
+  // that side - used by Auto Buy). Runs its own affordability (and
+  // inventory-space) check against running totals rather than calling
   // buyPulledAt per slot, since three back-to-back calls would each check
-  // against the same not-yet-updated cash/inventory and could overshoot both.
-  function buyAllPulled() {
+  // against the same not-yet-updated cash/inventory and could overshoot
+  // both - this is also what lets reel 1 eating the budget skip reel 2 but
+  // still leave reel 3 buyable, working left to right across the reels.
+  function buyAllPulled(minPrice = null, maxPrice = null) {
     let remainingCash = cash
     let remainingSpace = MAX_INVENTORY - inventory.length
     const boughtIndices = []
     const boughtItems = []
     pulledResults.forEach((item, i) => {
-      if (item && remainingCash >= item.price && remainingSpace > 0) {
+      if (!item) return
+      if (minPrice != null && item.price < minPrice) return
+      if (maxPrice != null && item.price > maxPrice) return
+      if (remainingCash >= item.price && remainingSpace > 0) {
         remainingCash -= item.price
         remainingSpace -= 1
         boughtIndices.push(i)
@@ -718,6 +725,7 @@ function App() {
         pulledResults={pulledResults}
         cash={cash}
         onBuy={buyPulledAt}
+        onAutoBuy={buyAllPulled}
         inventoryFull={inventory.length >= MAX_INVENTORY}
         resetSignal={rebirthCount}
       />
