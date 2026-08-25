@@ -78,6 +78,7 @@ export default function Lever({
   pulledResults,
   cash,
   onBuy,
+  onAutoBuy,
   inventoryFull = false,
   resetSignal,
 }) {
@@ -85,6 +86,9 @@ export default function Lever({
   const [spinning, setSpinning] = useState(false)
   const [autoPull, setAutoPull] = useState(false)
   const [autoPullThreshold, setAutoPullThreshold] = useState('')
+  const [autoBuy, setAutoBuy] = useState(false)
+  const [autoBuyMin, setAutoBuyMin] = useState('')
+  const [autoBuyMax, setAutoBuyMax] = useState('')
   // Counts real results in for the in-flight trigger, so "spinning" clears
   // only once every box has actually reported - not on a guessed timer. A
   // second independent timer here used to drift out of sync with each
@@ -127,6 +131,20 @@ export default function Lever({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPull, spinning, pulledResults, cash, autoPullThreshold])
 
+  // Auto Buy: whenever a pulled result sits there matching the [min, max]
+  // price range (either side blank means no bound on that side; both blank
+  // buys anything affordable), buys it automatically - working left to
+  // right across the reels with a single running cash total, same as the R
+  // hotkey's buy-all (see buyAllPulled in App.jsx). No per-reel range: one
+  // pair of thresholds covers every reel.
+  useEffect(() => {
+    if (!autoBuy) return
+    const min = autoBuyMin.trim() === '' ? null : Number(autoBuyMin)
+    const max = autoBuyMax.trim() === '' ? null : Number(autoBuyMax)
+    onAutoBuy(min, max)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoBuy, pulledResults, cash, autoBuyMin, autoBuyMax])
+
   // Rebirth (resetSignal = rebirthCount) can land mid-spin. Un-stick the
   // button and drop any in-progress threshold immediately rather than
   // waiting for the (now possibly-orphaned) spin to report - the boxes
@@ -136,6 +154,8 @@ export default function Lever({
     setSpinning(false)
     resultsInRef.current = 0
     setAutoPullThreshold('')
+    setAutoBuyMin('')
+    setAutoBuyMax('')
   }, [resetSignal])
 
   // Spacebar pulls the lever too, matching the button.
@@ -183,26 +203,66 @@ export default function Lever({
         <button className={spinning ? 'disabled-look' : ''} onClick={pull} aria-disabled={spinning}>
           {spinning ? 'Pulling...' : 'Pull Lever'}
         </button>
-        <button
-          className={`auto-pull-toggle${autoPull ? ' active' : ''}`}
-          onClick={() => setAutoPull((o) => !o)}
-        >
-          Auto Pull: {autoPull ? 'On' : 'Off'}
-        </button>
-        {autoPull && (
-          <input
-            type="number"
-            className="auto-pull-threshold"
-            placeholder="Stop at price..."
-            min="0"
-            value={autoPullThreshold}
-            onChange={(e) => setAutoPullThreshold(e.target.value)}
-            onFocus={(e) => e.target.select()}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.target.blur()
-            }}
-          />
-        )}
+      </div>
+      <div className="lever-auto-controls">
+        <div className="auto-control-group">
+          <button
+            className={`auto-pull-toggle${autoPull ? ' active' : ''}`}
+            onClick={() => setAutoPull((o) => !o)}
+          >
+            Auto Pull: {autoPull ? 'On' : 'Off'}
+          </button>
+          {autoPull && (
+            <input
+              type="number"
+              className="auto-pull-threshold"
+              placeholder="Stop at price..."
+              min="0"
+              value={autoPullThreshold}
+              onChange={(e) => setAutoPullThreshold(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.target.blur()
+              }}
+            />
+          )}
+        </div>
+        <div className="auto-control-group">
+          <button
+            className={`auto-buy-toggle${autoBuy ? ' active' : ''}`}
+            onClick={() => setAutoBuy((o) => !o)}
+          >
+            Auto Buy: {autoBuy ? 'On' : 'Off'}
+          </button>
+          {autoBuy && (
+            <>
+              <input
+                type="number"
+                className="auto-buy-threshold"
+                placeholder="Min price..."
+                min="0"
+                value={autoBuyMin}
+                onChange={(e) => setAutoBuyMin(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur()
+                }}
+              />
+              <input
+                type="number"
+                className="auto-buy-threshold"
+                placeholder="Max price..."
+                min="0"
+                value={autoBuyMax}
+                onChange={(e) => setAutoBuyMax(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur()
+                }}
+              />
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
