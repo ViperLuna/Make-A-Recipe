@@ -428,7 +428,7 @@
   right: 0;
   max-width: 480px;
   margin: 0 auto;
-  max-height: 200px;
+  height: 200px;
   overflow-y: auto;
   background: #1a1a1a;
   border-top: 2px solid #444;
