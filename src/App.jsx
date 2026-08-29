@@ -361,21 +361,20 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // N toggles the Rebirth panel - always allowed to close, but only opens if
-  // you can actually afford it, matching its grayed-out disabled button
-  // state. Needs real deps (unlike the switch above) since it reads cash and
-  // rebirthCount rather than just calling a stable setter.
+  // N toggles the Rebirth panel - always opens/closes regardless of
+  // affordability, matching the on-screen button, so you can check your next
+  // rebirth multiplier even when you can't afford it yet.
   useEffect(() => {
     if (!data) return
     function handleKeyDown(e) {
       if (e.ctrlKey || e.metaKey || e.altKey) return
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
       if (e.code !== 'KeyN') return
-      setRebirthOpen((o) => (o ? false : cash >= rebirthCost(rebirthCount, data.rebirth)))
+      setRebirthOpen((o) => !o)
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [data, cash, rebirthCount])
+  }, [data])
 
   if (!started) return <StartScreen onStart={() => setStarted(true)} />
   if (error) return <p>Failed to load game data: {error.message}</p>
