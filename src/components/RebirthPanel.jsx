@@ -28,7 +28,7 @@ export default function RebirthPanel({ rebirthData, rebirthCount, cash, onRebirt
         {!confirming ? (
           <button
             className={!canAfford ? 'disabled-look' : ''}
-            onClick={() => setConfirming(true)}
+            onClick={() => canAfford && setConfirming(true)}
             aria-disabled={!canAfford}
           >
             Rebirth for {formatMoney(cost)}
@@ -38,12 +38,17 @@ export default function RebirthPanel({ rebirthData, rebirthCount, cash, onRebirt
             <p className="confirm-text">
               This resets almost everything. Are you sure?
             </p>
+            {/* canAfford is recomputed every render from the live cash prop, so if
+                Auto Buy drains cash below cost while this confirm step is showing,
+                this grays out on its own instead of silently no-opping. */}
             <button
-              className="confirm-remove-btn"
+              className={`confirm-remove-btn${!canAfford ? ' disabled-look' : ''}`}
               onClick={() => {
+                if (!canAfford) return
                 onRebirth()
                 setConfirming(false)
               }}
+              aria-disabled={!canAfford}
             >
               Yes, rebirth
             </button>
