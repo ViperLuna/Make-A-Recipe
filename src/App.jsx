@@ -378,8 +378,15 @@ function App() {
 
   const occupiedSlot = gridSlots.find((s) => s.id === selectedStoveId && s.stove) ?? null
   const selectedStove = occupiedSlot?.stove ?? null
+  const sellMultiplier = sellValueMultiplier(rebirthCount, data.rebirth)
+  // Non-null only once the selected stove has actually finished cooking -
+  // computeReadyDish itself returns null while still mid-cook.
+  const selectedStoveReady = selectedStove
+    ? computeReadyDish(selectedStove, wordMap, data.dishWordLists, sellMultiplier)
+    : null
   const canAddToSelected =
-    selectedStove && !selectedStove.cookCompleteAt && selectedStove.contents.length < selectedStove.maxSlots
+    selectedStove &&
+    (!!selectedStoveReady || (!selectedStove.cookCompleteAt && selectedStove.contents.length < selectedStove.maxSlots))
 
   function handlePullResult(index, result) {
     setPulledResults((prev) => prev.map((r, i) => (i === index ? result : r)))
@@ -489,6 +496,15 @@ function App() {
 
   function addToSelectedStove(inventoryIndex) {
     if (selectedStoveId == null) return
+    if (selectedStoveReady) {
+      sellAndAddToStove(selectedStoveId, inventoryIndex, selectedStoveReady.value, {
+        dishName: selectedStoveReady.dishName,
+        comboEntries: selectedStoveReady.comboEntries,
+        ingredientNames: selectedStove.contents.map((i) => i.name),
+        mutation: selectedStove.mutation,
+      })
+      return
+    }
     addItemToStove(selectedStoveId, inventoryIndex)
   }
 
@@ -685,7 +701,6 @@ function App() {
   }
 
   const hasEmptyUnlockedSlot = gridSlots.some((s) => s.unlocked && !s.stove)
-  const sellMultiplier = sellValueMultiplier(rebirthCount, data.rebirth)
   const rebirthPrice = rebirthCost(rebirthCount, data.rebirth)
   const mittBonus = equippedMittTier ? data.luck.mittRedBonus[equippedMittTier] : 0
   const activeLuckPotion =
