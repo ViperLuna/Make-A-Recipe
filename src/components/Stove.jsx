@@ -14,6 +14,7 @@ export default function Stove({
   wordMap,
   wordLists,
   sellMultiplier = 1,
+  onDoneChange,
 }) {
   const [remaining, setRemaining] = useState(null)
   const [confirmingRemoveStove, setConfirmingRemoveStove] = useState(false)
@@ -71,6 +72,16 @@ export default function Stove({
   useEffect(() => {
     if (!selected) setConfirmingRemoveStove(false)
   }, [selected])
+
+  // Ticks accurately on its own (the interval above), so bubble every isDone
+  // flip up to the parent - otherwise a stove selected before it finishes
+  // leaves App.jsx with no reason to re-render at the exact moment the timer
+  // elapses, and derived values like the Inventory Add button's enabled
+  // state stay stale until some unrelated action happens to re-render it.
+  useEffect(() => {
+    onDoneChange?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDone])
 
   const ready = isDone ? computeReadyDish(stove, wordMap, wordLists, sellMultiplier) : null
   const comboEntries = ready?.comboEntries ?? null

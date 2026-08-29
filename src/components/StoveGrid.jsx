@@ -15,6 +15,7 @@ export default function StoveGrid({
   wordLists,
   StoveComponent,
   sellMultiplier = 1,
+  onDoneChange,
 }) {
   return (
     <div className="stoves">
@@ -57,6 +58,7 @@ export default function StoveGrid({
             wordMap={wordMap}
             wordLists={wordLists}
             sellMultiplier={sellMultiplier}
+            onDoneChange={onDoneChange}
           />
         )
       })}
