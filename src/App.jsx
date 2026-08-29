@@ -149,6 +149,11 @@ function App() {
   const [stoveStockBucket, setStoveStockBucket] = useState(0)
   const [backupOpen, setBackupOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // Bumped whenever any stove's cook timer finishes, purely to force a
+  // re-render - selectedStoveReady below depends on wall-clock time via
+  // computeReadyDish, and nothing else guarantees App.jsx re-renders at the
+  // exact moment a pre-selected stove's timer naturally elapses.
+  const [, forceReadyTick] = useState(0)
 
   // Shared by the startup load and by importing a backup file, so the two
   // paths can't drift apart on what each field defaults to.
@@ -880,6 +885,7 @@ function App() {
         wordLists={data.dishWordLists}
         StoveComponent={Stove}
         sellMultiplier={sellMultiplier}
+        onDoneChange={() => forceReadyTick((t) => t + 1)}
       />
 
       <Inventory
