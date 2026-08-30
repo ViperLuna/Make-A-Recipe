@@ -158,7 +158,7 @@
 .lever-slot {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 3px;
 }
 
 .lever-buy-slot {
