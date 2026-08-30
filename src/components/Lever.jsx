@@ -73,6 +73,9 @@ export default function Lever({
   ingredientsData,
   leverData,
   mechanismCount,
+  totalMechanismSlots,
+  mechanismSlotsData,
+  onUnlockMechanism,
   redBonus = 0,
   onResult,
   pulledResults,
@@ -175,30 +178,54 @@ export default function Lever({
   return (
     <div className="lever">
       <div className="lever-boxes">
-        {Array.from({ length: mechanismCount }).map((_, i) => (
-          <div className="lever-slot" key={i}>
-            <SpinnerBox
-              ingredientsData={ingredientsData}
-              leverData={leverData}
-              redBonus={redBonus}
-              trigger={trigger}
-              resetSignal={resetSignal}
-              onResult={(result) => handleBoxResult(i, result)}
-              isPrimary={i === 0}
-            />
-            <div className="lever-buy-slot">
-              {pulledResults[i] && (
-                <button
-                  className={cash < pulledResults[i].price || inventoryFull ? 'disabled-look' : ''}
-                  onClick={() => onBuy(i)}
-                  aria-disabled={cash < pulledResults[i].price || inventoryFull}
-                >
-                  {inventoryFull ? 'Inventory full' : `Buy for ${formatMoney(pulledResults[i].price)}`}
-                </button>
-              )}
+        {Array.from({ length: totalMechanismSlots }).map((_, i) => {
+          if (i >= mechanismCount) {
+            // Not unlocked yet. Only the very next slot in line has a real
+            // price - the ones after it stay a plain "Locked" (no price,
+            // nothing to click through to) until their predecessor is
+            // bought, matching onUnlockMechanism's own in-order guard.
+            const isNext = i === mechanismCount
+            const cost = mechanismSlotsData[`slot${i + 1}`]?.cost ?? 0
+            return (
+              <div className="lever-slot" key={i}>
+                <div className="lever-box locked-box" />
+                <div className="lever-buy-slot">
+                  <button
+                    className={!isNext || cash < cost ? 'disabled-look' : ''}
+                    onClick={() => onUnlockMechanism(i)}
+                    aria-disabled={!isNext || cash < cost}
+                  >
+                    {isNext ? `Unlock for ${formatMoney(cost)}` : 'Locked'}
+                  </button>
+                </div>
+              </div>
+            )
+          }
+          return (
+            <div className="lever-slot" key={i}>
+              <SpinnerBox
+                ingredientsData={ingredientsData}
+                leverData={leverData}
+                redBonus={redBonus}
+                trigger={trigger}
+                resetSignal={resetSignal}
+                onResult={(result) => handleBoxResult(i, result)}
+                isPrimary={i === 0}
+              />
+              <div className="lever-buy-slot">
+                {pulledResults[i] && (
+                  <button
+                    className={cash < pulledResults[i].price || inventoryFull ? 'disabled-look' : ''}
+                    onClick={() => onBuy(i)}
+                    aria-disabled={cash < pulledResults[i].price || inventoryFull}
+                  >
+                    {inventoryFull ? 'Inventory full' : `Buy for ${formatMoney(pulledResults[i].price)}`}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <div className="lever-controls">
         <button className={spinning ? 'disabled-look' : ''} onClick={pull} aria-disabled={spinning}>
