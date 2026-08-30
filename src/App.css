@@ -141,6 +141,11 @@
   padding: 0 0.25rem;
 }
 
+.lever-box.locked-box {
+  border-color: #fff;
+  opacity: 0.35;
+}
+
 .lever-word {
   font-weight: bold;
   text-transform: uppercase;
@@ -227,14 +232,6 @@
   font-size: 0.8rem;
   padding: 0.2rem 0.4rem;
   box-sizing: border-box;
-}
-
-.pulled-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
 }
 
 .stoves {

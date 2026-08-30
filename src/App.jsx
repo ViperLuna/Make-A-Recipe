@@ -739,6 +739,9 @@ function App() {
         ingredientsData={data.ingredients}
         leverData={data.lever}
         mechanismCount={mechanismSlots.filter(Boolean).length}
+        totalMechanismSlots={TOTAL_MECHANISM_SLOTS}
+        mechanismSlotsData={data.lever.mechanismSlots}
+        onUnlockMechanism={unlockMechanism}
         redBonus={redBonus}
         onResult={handlePullResult}
         pulledResults={pulledResults}
@@ -748,23 +751,6 @@ function App() {
         inventoryFull={inventory.length >= MAX_INVENTORY}
         resetSignal={rebirthCount}
       />
-
-      <div className="pulled-actions">
-        {(() => {
-          const nextIndex = mechanismSlots.filter(Boolean).length
-          if (nextIndex >= TOTAL_MECHANISM_SLOTS) return null
-          const cost = data.lever.mechanismSlots[`slot${nextIndex + 1}`]?.cost ?? 0
-          return (
-            <button
-              className={cash < cost ? 'disabled-look' : ''}
-              onClick={() => unlockMechanism(nextIndex)}
-              aria-disabled={cash < cost}
-            >
-              Unlock lever mechanism {nextIndex + 1} for {formatMoney(cost)}
-            </button>
-          )
-        })()}
-      </div>
 
       <div className="toolbar">
         <button onClick={() => setShopOpen((o) => !o)}>
