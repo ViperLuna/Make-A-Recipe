@@ -18,7 +18,10 @@ export function formatMoney(n) {
   const abs = Math.abs(n)
   if (abs < 1000) return `$${n.toFixed(2)}`
   for (const { value, suffix } of SUFFIXES) {
-    if (abs >= value) return `$${(n / value).toFixed(2)}${suffix}`
+    // No decimals once a suffix kicks in - "$100K" instead of "$100.00K".
+    // Keeps suffixed prices shorter, which matters on tight mobile buttons
+    // like the lever mechanism unlock ones.
+    if (abs >= value) return `$${(n / value).toFixed(0)}${suffix}`
   }
   return `$${n.toFixed(2)}`
 }
