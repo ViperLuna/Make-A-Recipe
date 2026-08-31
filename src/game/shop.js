@@ -10,19 +10,19 @@ function rotationRand(now) {
 // Clock-aligned 5-minute rotation: everyone (well, just this one save, but the
 // logic is the same) sees the same stock for the whole window, reseeded each
 // time the window rolls over. Deterministic from the bucket number alone.
+//
+// Every stove is always in stock - only the per-rotation quantity is random.
+// Gating whether a stove appeared at all (like the mitt shop still does)
+// stopped being interesting once you're buying every tier eventually anyway;
+// the timer + random restock count is the part worth keeping.
 export function getShopStock(stovesData, stoveShopData, now = Date.now()) {
   const { rand, nextRotationAt } = rotationRand(now)
 
-  const stock = stovesData.stoves
-    .map((stove) => {
-      const chance = stoveShopData.tierAppearanceChance[stove.tier]
-      const available = chance === 'always in stock' ? true : rand() < chance
-      if (!available) return null
-      const [min, max] = stoveShopData.tierQuantityRange[stove.tier]
-      const quantity = min + Math.floor(rand() * (max - min + 1))
-      return { stove, quantity }
-    })
-    .filter(Boolean)
+  const stock = stovesData.stoves.map((stove) => {
+    const [min, max] = stoveShopData.tierQuantityRange[stove.tier]
+    const quantity = min + Math.floor(rand() * (max - min + 1))
+    return { stove, quantity }
+  })
 
   return { stock, nextRotationAt }
 }
