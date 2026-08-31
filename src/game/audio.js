@@ -12,6 +12,8 @@ import bounceOffTheReelsUrl from '../assets/audio/bounce-off-the-reels.mp3'
 import orderUpUrl from '../assets/audio/order-up.mp3'
 import crazyLuckUrl from '../assets/audio/crazy-luck.mp3'
 import onARollUrl from '../assets/audio/on-a-roll.mp3'
+import dinerDeedsUrl from '../assets/audio/diner-deeds.mp3'
+import stirFrySoftnessUrl from '../assets/audio/stir-fry-softness.mp3'
 
 const STORAGE_KEYS = {
   musicVolume: 'mar-audio-music-volume',
@@ -40,6 +42,8 @@ export const MUSIC = {
   'Order Up': orderUpUrl,
   'Crazy Luck': crazyLuckUrl,
   'On A Roll': onARollUrl,
+  'Diner Deeds': dinerDeedsUrl,
+  'Stir Fry Softness': stirFrySoftnessUrl,
 }
 export const SFX = {
   reelTick: reelTickUrl,
