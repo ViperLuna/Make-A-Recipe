@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   getMusicVolume,
   setMusicVolume,
@@ -14,13 +14,28 @@ import {
   playPreviousTrack,
 } from '../game/audio'
 
-export default function SettingsPanel({ onClose, autoCook, onToggleAutoCook }) {
+export default function SettingsPanel({
+  onClose,
+  autoCook,
+  onToggleAutoCook,
+  autoPull,
+  setAutoPull,
+  autoPullThreshold,
+  setAutoPullThreshold,
+  autoBuy,
+  setAutoBuy,
+  autoBuyMin,
+  setAutoBuyMin,
+  autoBuyMax,
+  setAutoBuyMax,
+}) {
   const [musicVolume, setMusicVolumeState] = useState(getMusicVolume)
   const [musicMuted, setMusicMutedState] = useState(isMusicMuted)
   const [sfxVolume, setSfxVolumeState] = useState(getSfxVolume)
   const [sfxMuted, setSfxMutedState] = useState(isSfxMuted)
   const [nowPlaying, setNowPlaying] = useState(getCurrentMusicName)
   const [canGoBack, setCanGoBack] = useState(hasPreviousTrack)
+  const autoBuyMaxRef = useRef(null)
 
   // audio.js's playback state lives outside React (module-level, driven by
   // its own timers) - poll it while the panel's open rather than wiring up
@@ -87,6 +102,79 @@ export default function SettingsPanel({ onClose, autoCook, onToggleAutoCook }) {
         <p className="hint settings-auto-hint">
           Starts cooking automatically the instant a stove is full and idle.
         </p>
+
+        <div className="settings-row settings-row-wrap">
+          <label>Auto Pull</label>
+          <button
+            className={`auto-pull-toggle${autoPull ? ' active' : ''}`}
+            onClick={() => setAutoPull((o) => !o)}
+          >
+            {autoPull ? 'On' : 'Off'}
+          </button>
+          {autoPull && (
+            <input
+              type="number"
+              className="auto-pull-threshold"
+              placeholder="Stop at price..."
+              min="0"
+              value={autoPullThreshold}
+              onChange={(e) => setAutoPullThreshold(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.target.blur()
+              }}
+            />
+          )}
+        </div>
+        <p className="hint settings-auto-hint">
+          Keeps pulling on its own, stopping on an affordable result (optionally only one at or
+          above the threshold price).
+        </p>
+
+        <div className="settings-row settings-row-wrap">
+          <label>Auto Buy</label>
+          <button
+            className={`auto-buy-toggle${autoBuy ? ' active' : ''}`}
+            onClick={() => setAutoBuy((o) => !o)}
+          >
+            {autoBuy ? 'On' : 'Off'}
+          </button>
+          {autoBuy && (
+            <>
+              <input
+                type="number"
+                className="auto-buy-threshold"
+                placeholder="Min price..."
+                min="0"
+                value={autoBuyMin}
+                onChange={(e) => setAutoBuyMin(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') autoBuyMaxRef.current?.focus()
+                }}
+              />
+              <input
+                ref={autoBuyMaxRef}
+                type="number"
+                className="auto-buy-threshold"
+                placeholder="Max price..."
+                min="0"
+                value={autoBuyMax}
+                onChange={(e) => setAutoBuyMax(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur()
+                }}
+              />
+            </>
+          )}
+        </div>
+        <p className="hint settings-auto-hint">
+          Buys any pulled result inside the price range automatically, working left to right
+          across the reels.
+        </p>
+
+        <hr className="settings-divider" />
 
         <div className="settings-row">
           <label htmlFor="music-volume">Music volume</label>
