@@ -201,27 +201,6 @@
   box-sizing: border-box;
 }
 
-.lever-auto-controls {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.auto-control-group {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.auto-control-group button {
-  width: auto;
-}
-
 .auto-buy-toggle.active {
   border-color: #3ecf3e;
   color: #3ecf3e;
@@ -235,6 +214,17 @@
 .settings-auto-hint {
   margin-top: -0.4rem;
   margin-bottom: 0.75rem;
+}
+
+.settings-row-wrap {
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid #444;
+  margin: 1rem 0;
 }
 
 .auto-buy-threshold {
