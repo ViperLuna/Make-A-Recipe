@@ -149,9 +149,16 @@ function App() {
   const [stoveStockBucket, setStoveStockBucket] = useState(0)
   const [backupOpen, setBackupOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  // Ephemeral like Auto Pull/Auto Buy (not persisted, resets on reload) -
-  // toggled from the Settings panel.
+  // Ephemeral (not persisted, resets on reload) - all toggled and edited
+  // from the Settings panel now. The actual auto-pull/auto-buy effects live
+  // in Lever.jsx, which only reads this state; Auto Cook's own effect is
+  // below, since it needs gridSlots/startCooking which live here.
   const [autoCook, setAutoCook] = useState(false)
+  const [autoPull, setAutoPull] = useState(false)
+  const [autoPullThreshold, setAutoPullThreshold] = useState('')
+  const [autoBuy, setAutoBuy] = useState(false)
+  const [autoBuyMin, setAutoBuyMin] = useState('')
+  const [autoBuyMax, setAutoBuyMax] = useState('')
   // Bumped whenever any stove's cook timer finishes, purely to force a
   // re-render - selectedStoveReady below depends on wall-clock time via
   // computeReadyDish, and nothing else guarantees App.jsx re-renders at the
@@ -715,6 +722,12 @@ function App() {
     setPulledResults(Array(TOTAL_MECHANISM_SLOTS).fill(null))
     setSelectedStoveId(null)
     setEquippedMittTier(null)
+    // Un-stick any in-progress threshold immediately, matching the old
+    // behavior when this lived in Lever.jsx's own resetSignal effect - the
+    // on/off toggles themselves are left alone, same as before.
+    setAutoPullThreshold('')
+    setAutoBuyMin('')
+    setAutoBuyMax('')
     // Otherwise a stove bought right before rebirthing could leave its
     // per-rotation stock exhausted even though the wipe above just took it
     // away again - locking it out of the shop for the rest of that window
@@ -771,6 +784,11 @@ function App() {
         onAutoBuy={buyAllPulled}
         inventoryFull={inventory.length >= MAX_INVENTORY}
         resetSignal={rebirthCount}
+        autoPull={autoPull}
+        autoPullThreshold={autoPullThreshold}
+        autoBuy={autoBuy}
+        autoBuyMin={autoBuyMin}
+        autoBuyMax={autoBuyMax}
       />
 
       <div className="toolbar">
@@ -797,6 +815,16 @@ function App() {
           onClose={() => setSettingsOpen(false)}
           autoCook={autoCook}
           onToggleAutoCook={() => setAutoCook((o) => !o)}
+          autoPull={autoPull}
+          setAutoPull={setAutoPull}
+          autoPullThreshold={autoPullThreshold}
+          setAutoPullThreshold={setAutoPullThreshold}
+          autoBuy={autoBuy}
+          setAutoBuy={setAutoBuy}
+          autoBuyMin={autoBuyMin}
+          setAutoBuyMin={setAutoBuyMin}
+          autoBuyMax={autoBuyMax}
+          setAutoBuyMax={setAutoBuyMax}
         />
       )}
 
