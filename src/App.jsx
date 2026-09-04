@@ -149,6 +149,9 @@ function App() {
   const [stoveStockBucket, setStoveStockBucket] = useState(0)
   const [backupOpen, setBackupOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // Ephemeral like Auto Pull/Auto Buy (not persisted, resets on reload) -
+  // toggled from the Settings panel.
+  const [autoCook, setAutoCook] = useState(false)
   // Bumped whenever any stove's cook timer finishes, purely to force a
   // re-render - selectedStoveReady below depends on wall-clock time via
   // computeReadyDish, and nothing else guarantees App.jsx re-renders at the
@@ -375,6 +378,24 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [data])
+
+  // Auto Cook (Settings toggle): the instant a stove becomes full and idle,
+  // start it cooking automatically - just startCooking's own self-guard
+  // applied to every stove instead of one, so this can safely re-run on
+  // every gridSlots change (a purchase filling the last slot, a stove
+  // finishing and being reloaded, etc.) without double-firing. The manual
+  // Cook button stays untouched, for cooking a stove that isn't full yet.
+  // startCooking is defined further down but is a hoisted function
+  // declaration, so it's already available here.
+  useEffect(() => {
+    if (!autoCook || !data) return
+    gridSlots.forEach((slot) => {
+      if (slot.unlocked && slot.stove && !slot.stove.cookCompleteAt && slot.stove.contents.length === slot.stove.maxSlots) {
+        startCooking(slot.id)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCook, gridSlots, data])
 
   if (!started) return <StartScreen onStart={() => setStarted(true)} />
   if (error) return <p>Failed to load game data: {error.message}</p>
@@ -771,7 +792,13 @@ function App() {
         </button>
       </div>
 
-      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsPanel
+          onClose={() => setSettingsOpen(false)}
+          autoCook={autoCook}
+          onToggleAutoCook={() => setAutoCook((o) => !o)}
+        />
+      )}
 
       {dexOpen && (
         <Dex dex={dex} totalPossible={totalPossibleDishes} onClose={() => setDexOpen(false)} />
