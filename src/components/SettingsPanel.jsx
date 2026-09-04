@@ -14,7 +14,7 @@ import {
   playPreviousTrack,
 } from '../game/audio'
 
-export default function SettingsPanel({ onClose }) {
+export default function SettingsPanel({ onClose, autoCook, onToggleAutoCook }) {
   const [musicVolume, setMusicVolumeState] = useState(getMusicVolume)
   const [musicMuted, setMusicMutedState] = useState(isMusicMuted)
   const [sfxVolume, setSfxVolumeState] = useState(getSfxVolume)
@@ -74,6 +74,19 @@ export default function SettingsPanel({ onClose }) {
           <h3>Settings</h3>
           <button onClick={onClose}>Close</button>
         </div>
+
+        <div className="settings-row">
+          <label>Auto Cook</label>
+          <button
+            className={`auto-cook-toggle${autoCook ? ' active' : ''}`}
+            onClick={onToggleAutoCook}
+          >
+            {autoCook ? 'On' : 'Off'}
+          </button>
+        </div>
+        <p className="hint settings-auto-hint">
+          Starts cooking automatically the instant a stove is full and idle.
+        </p>
 
         <div className="settings-row">
           <label htmlFor="music-volume">Music volume</label>
