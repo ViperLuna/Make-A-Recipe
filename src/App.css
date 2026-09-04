@@ -227,6 +227,16 @@
   color: #3ecf3e;
 }
 
+.auto-cook-toggle.active {
+  border-color: #3ecf3e;
+  color: #3ecf3e;
+}
+
+.settings-auto-hint {
+  margin-top: -0.4rem;
+  margin-bottom: 0.75rem;
+}
+
 .auto-buy-threshold {
   width: 90px;
   font-size: 0.8rem;
