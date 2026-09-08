@@ -41,7 +41,14 @@ export default function Inventory({
         Inventory ({inventory.length}/{maxInventory}
         {inventory.length >= maxInventory ? ' - FULL' : ''})
       </h3>
-      {!selectedStove && <p className="hint">Select a stove above to add ingredients to it.</p>}
+      {/* Always rendered (never removed from the DOM) so this line's height
+          stays reserved regardless of selection state - toggling a stove
+          used to add/remove this whole paragraph, shifting every row below
+          it (including whatever ingredient the mouse was hovering) up or
+          down by a full line. */}
+      <p className="hint">
+        {selectedStove ? `Adding to: ${selectedStove.name}` : 'Select a stove above to add ingredients to it.'}
+      </p>
       {inventory.length === 0 && <p>Nothing yet - pull the lever and buy something.</p>}
 
       {inventory.length > 0 && (
