@@ -8,6 +8,8 @@
     "orange": 0.02,
     "red": 0.01
   },
+  "affordableBiasChance": 0.5,
+  "affordableBiasNote": "Each pull has this chance of being drawn only from ingredients priced at or below current cash, ignoring tier weights for that one roll - otherwise the normal tier-weighted roll above applies. Keeps a low-cash player from waiting a long time on an unlucky streak of pulls they can't afford, without guaranteeing anything (soft odds boost, not a hard pity timer).",
   "mechanismSlots": {
     "note": "Each slot spins independently and simultaneously on every lever pull. Room to extend past 3 later (up to 5-6).",
     "slot1": { "cost": 0, "note": "free, starting slot" },
