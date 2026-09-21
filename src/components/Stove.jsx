@@ -90,7 +90,7 @@ export default function Stove({
 
   return (
     <div
-      className={`stove-card${selected ? ' selected' : ''}`}
+      className={`stove-card${selected ? ' selected' : ''}${isDone ? ' ready' : ''}`}
       onClick={() => onSelect(stove.id)}
     >
       <h3>{stove.name}</h3>
