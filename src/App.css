@@ -270,6 +270,18 @@
   border-color: #f5923e;
 }
 
+/* Finished cooking (product ready to sell) overrides the orange selected
+   look with green - dark when it's just sitting there done, light if it's
+   also the one currently selected. Lets you spot a ready stove at a glance
+   while scrolling on mobile without reading any text on the card. */
+.stove-card.ready {
+  border-color: #1a7a1a;
+}
+
+.stove-card.ready.selected {
+  border-color: #8ee08e;
+}
+
 .stove-card h3 {
   margin: 0 0 0.2rem;
   font-size: 0.8rem;
