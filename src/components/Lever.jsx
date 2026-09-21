@@ -15,7 +15,7 @@ const TIER_COLORS = {
 // One independent spinner. All boxes share the same trigger and duration (so
 // they start and finish together), but each rolls its own real result and its
 // own filler frames - genuinely independent outcomes, not copies of each other.
-function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal, onResult, isPrimary }) {
+function SpinnerBox({ ingredientsData, leverData, redBonus, cash, trigger, resetSignal, onResult, isPrimary }) {
   const [display, setDisplay] = useState(null)
   const prevTriggerRef = useRef(trigger)
 
@@ -33,7 +33,7 @@ function SpinnerBox({ ingredientsData, leverData, redBonus, trigger, resetSignal
       return
     }
     if (trigger === 0) return
-    const realResult = pullIngredient(ingredientsData, leverData.basePullChance, redBonus)
+    const realResult = pullIngredient(ingredientsData, leverData.basePullChance, redBonus, cash, leverData.affordableBiasChance)
     const { startMs, endMs } = leverData.spinAnimation.flickerIntervalRange
     const totalMs = leverData.spinAnimation.baseDurationSeconds * 1000
     const startTime = performance.now()
@@ -209,6 +209,7 @@ export default function Lever({
                 ingredientsData={ingredientsData}
                 leverData={leverData}
                 redBonus={redBonus}
+                cash={cash}
                 trigger={trigger}
                 resetSignal={resetSignal}
                 onResult={(result) => handleBoxResult(i, result)}

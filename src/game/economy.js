@@ -7,7 +7,28 @@ export const TIER_INDEX = Object.fromEntries(TIER_ORDER.map((t, i) => [t, i]))
 // Picks a random ingredient from ingredients.json, honoring lever.json's basePullChance
 // tier weights, shifted toward red by redBonus (equipped mitt's mittRedBonus from luck.json).
 // The returned object carries its stable array index (needed by naming.js's word map).
-export function pullIngredient(ingredientsData, basePullChance, redBonus = 0, rand = Math.random) {
+//
+// affordableBiasChance (lever.json) gives every pull a flat chance of instead being
+// drawn uniformly from whatever's priced at or below cash, ignoring tier weights for
+// that one roll - a soft odds boost so a low-cash player isn't stuck waiting out a
+// long unlucky streak, without guaranteeing anything the way a hard pity timer would.
+export function pullIngredient(
+  ingredientsData,
+  basePullChance,
+  redBonus = 0,
+  cash = null,
+  affordableBiasChance = 0,
+  rand = Math.random
+) {
+  if (cash != null && rand() < affordableBiasChance) {
+    const affordable = ingredientsData.ingredients
+      .map((ing, index) => ({ ...ing, index }))
+      .filter((ing) => ing.price <= cash)
+    if (affordable.length > 0) {
+      return affordable[Math.floor(rand() * affordable.length)]
+    }
+  }
+
   // basePullChance also carries a "note" documentation string in the JSON file -
   // only pull actual tier weights out of it, never trust every key blindly.
   const baseWeights = Object.fromEntries(TIER_ORDER.map((t) => [t, basePullChance[t]]))
