@@ -311,6 +311,14 @@
   gap: 0.2rem;
 }
 
+.ingredient-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .remove-btn {
   display: inline;
   width: auto;
