@@ -100,7 +100,7 @@ export default function Stove({
       <ul className="stove-contents">
         {stove.contents.map((item, i) => (
           <li key={i}>
-            {item.name}
+            <span className="ingredient-name">{item.name}</span>
             {isEditable && (
               <button
                 className="remove-btn"
