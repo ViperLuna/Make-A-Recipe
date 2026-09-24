@@ -41,7 +41,7 @@ export default function MittShop({ mittsData, shopData, luckData, cash, equipped
                 {mitt.name.toUpperCase()}
               </span>
               <span className="shop-item-detail">
-                {formatMoney(mitt.price)} - +{(luckData.mittRedBonus[mitt.tier] * 100).toFixed(0)}% red chance
+                {formatMoney(mitt.price)} - +{Number((luckData.mittRedBonus[mitt.tier] * 100).toFixed(1))}% red chance
               </span>
               <button
                 className={cash < mitt.price || isEquipped || isDowngrade ? 'disabled-look' : ''}
