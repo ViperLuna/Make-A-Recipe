@@ -164,7 +164,7 @@ export default function Stove({
         </div>
       )}
 
-      {selected && isEditable && (
+      {selected && isEditable && stove.contents.length === 0 && (
         <div className="remove-stove-section">
           {!confirmingRemoveStove ? (
             <button
