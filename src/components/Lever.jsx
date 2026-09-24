@@ -126,9 +126,10 @@ export default function Lever({
   // least that high, so the player can let it run past cheap-but-affordable
   // stuff and only stop for something big. Buying the offending result (or
   // overwriting it with a manual pull) changes pulledResults, which re-runs
-  // this effect and lets it resume.
+  // this effect and lets it resume. A full inventory also pauses it - nothing
+  // pulled could be bought anyway - and freeing space resumes it.
   useEffect(() => {
-    if (!autoPull || spinning) return
+    if (!autoPull || spinning || inventoryFull) return
     const threshold = autoPullThreshold.trim() === '' ? null : Number(autoPullThreshold)
     const shouldWait = pulledResults.some((item) => {
       if (!item || cash < item.price) return false
@@ -137,7 +138,7 @@ export default function Lever({
     if (shouldWait) return
     pull()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoPull, spinning, pulledResults, cash, autoPullThreshold])
+  }, [autoPull, spinning, pulledResults, cash, autoPullThreshold, inventoryFull])
 
   // Auto Buy: whenever a pulled result sits there matching the [min, max]
   // price range (either side blank means no bound on that side; both blank

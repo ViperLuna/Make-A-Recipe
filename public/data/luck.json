@@ -3,7 +3,7 @@
   "designTarget": "~1-in-5 (20%) red chance at max mitt + max potion, referencing fishing-game 'mythical every ~5 casts' convention",
   "baseRedChance": 0.01,
   "mittRedBonus": {
-    "white": 0.00,
+    "white": 0.005,
     "green": 0.01,
     "blue": 0.02,
     "purple": 0.04,

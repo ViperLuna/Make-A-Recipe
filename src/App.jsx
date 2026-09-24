@@ -549,7 +549,7 @@ function App() {
 
   function removeFromStove(stoveId, contentIndex) {
     const slot = gridSlots.find((s) => s.id === stoveId)
-    if (!slot?.stove || slot.stove.cookCompleteAt) return
+    if (!slot?.stove || slot.stove.cookCompleteAt || inventory.length >= MAX_INVENTORY) return
     const item = slot.stove.contents[contentIndex]
     setInventory((inv) => [...inv, item])
     setGridSlots((prev) =>
@@ -656,10 +656,8 @@ function App() {
 
   function removeStove(stoveId) {
     const slot = gridSlots.find((s) => s.id === stoveId)
-    if (!slot?.stove || slot.stove.cookCompleteAt) return
-    if (slot.stove.contents.length > 0) {
-      setInventory((inv) => [...inv, ...slot.stove.contents])
-    }
+    // Only an empty stove can be removed - the button is hidden otherwise.
+    if (!slot?.stove || slot.stove.cookCompleteAt || slot.stove.contents.length > 0) return
     setGridSlots((prev) => prev.map((s) => (s.id === stoveId ? { ...s, stove: null } : s)))
     setSelectedStoveId((id) => (id === stoveId ? null : id))
   }
