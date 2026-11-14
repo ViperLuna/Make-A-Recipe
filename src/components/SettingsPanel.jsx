@@ -18,6 +18,8 @@ export default function SettingsPanel({
   onClose,
   autoCook,
   onToggleAutoCook,
+  autoAdd,
+  onToggleAutoAdd,
   autoPull,
   setAutoPull,
   autoPullThreshold,
@@ -101,6 +103,20 @@ export default function SettingsPanel({
         </div>
         <p className="hint settings-auto-hint">
           Starts cooking automatically the instant a stove is full and idle.
+        </p>
+
+        <div className="settings-row">
+          <label>Auto Add</label>
+          <button
+            className={`auto-add-toggle${autoAdd ? ' active' : ''}`}
+            onClick={onToggleAutoAdd}
+          >
+            {autoAdd ? 'On' : 'Off'}
+          </button>
+        </div>
+        <p className="hint settings-auto-hint">
+          Fills open stove slots from the top of your inventory, in its current sort order. A
+          finished dish is sold first, then the stove is refilled.
         </p>
 
         <div className="settings-row settings-row-wrap">

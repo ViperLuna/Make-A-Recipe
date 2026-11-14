@@ -206,7 +206,8 @@
   color: #3ecf3e;
 }
 
-.auto-cook-toggle.active {
+.auto-cook-toggle.active,
+.auto-add-toggle.active {
   border-color: #3ecf3e;
   color: #3ecf3e;
 }
