@@ -11,6 +11,7 @@ import { computeReadyDish } from './game/dish'
 import { rollCrate } from './game/bulkCrate'
 import { getShopStock, ROTATION_MS } from './game/shop'
 import { playSfx } from './game/audio'
+import { sortInventory } from './game/inventorySort'
 import Lever from './components/Lever'
 import Stove from './components/Stove'
 import StoveGrid from './components/StoveGrid'
@@ -154,6 +155,7 @@ function App() {
   // in Lever.jsx, which only reads this state; Auto Cook's own effect is
   // below, since it needs gridSlots/startCooking which live here.
   const [autoCook, setAutoCook] = useState(false)
+  const [autoAdd, setAutoAdd] = useState(false)
   const [autoPull, setAutoPull] = useState(false)
   const [autoPullThreshold, setAutoPullThreshold] = useState('')
   const [autoBuy, setAutoBuy] = useState(false)
@@ -163,7 +165,7 @@ function App() {
   // re-render - selectedStoveReady below depends on wall-clock time via
   // computeReadyDish, and nothing else guarantees App.jsx re-renders at the
   // exact moment a pre-selected stove's timer naturally elapses.
-  const [, forceReadyTick] = useState(0)
+  const [readyTick, forceReadyTick] = useState(0)
 
   // Shared by the startup load and by importing a backup file, so the two
   // paths can't drift apart on what each field defaults to.
@@ -403,6 +405,59 @@ function App() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoCook, gridSlots, data])
+
+  // Auto Add: fills any idle stove with open slots from the top of the
+  // inventory, in its current sort order. A stove sitting on a finished dish
+  // is sold first, then refilled from empty. Handles one stove per pass -
+  // the state update re-runs this effect for the next one, so the dex
+  // bookkeeping in recordDishInDex always sees the previous sale. readyTick
+  // is what wakes it the moment a cook timer elapses.
+  useEffect(() => {
+    if (!autoAdd || !data || !wordMap || inventory.length === 0) return
+    const now = Date.now()
+    const slot = gridSlots.find((s) => {
+      if (!s.unlocked || !s.stove) return false
+      const { cookCompleteAt, contents, maxSlots } = s.stove
+      return cookCompleteAt ? cookCompleteAt <= now : contents.length < maxSlots
+    })
+    if (!slot) return
+    const stove = slot.stove
+    const ready = stove.cookCompleteAt
+      ? computeReadyDish(stove, wordMap, data.dishWordLists, sellValueMultiplier(rebirthCount, data.rebirth))
+      : null
+    const kept = ready ? [] : stove.contents
+    const picks = sortInventory(inventory, inventorySortField, inventorySortDir).slice(0, stove.maxSlots - kept.length)
+    const pickedIndices = new Set(picks.map((p) => p.index))
+
+    if (ready) {
+      playSfx('sellChing')
+      setCash((c) => c + ready.value)
+      recordDishInDex({
+        dishName: ready.dishName,
+        comboEntries: ready.comboEntries,
+        ingredientNames: stove.contents.map((i) => i.name),
+        mutation: stove.mutation,
+      })
+    }
+    setInventory((inv) => inv.filter((_, i) => !pickedIndices.has(i)))
+    setGridSlots((prev) =>
+      prev.map((s) =>
+        s.id === slot.id
+          ? {
+              ...s,
+              stove: {
+                ...s.stove,
+                contents: [...kept, ...picks.map((p) => p.item)],
+                cookStartedAt: null,
+                cookCompleteAt: null,
+                mutation: null,
+              },
+            }
+          : s
+      )
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAdd, data, wordMap, gridSlots, inventory, readyTick, inventorySortField, inventorySortDir, rebirthCount])
 
   if (!started) return <StartScreen onStart={() => setStarted(true)} />
   if (error) return <p>Failed to load game data: {error.message}</p>
@@ -813,6 +868,8 @@ function App() {
           onClose={() => setSettingsOpen(false)}
           autoCook={autoCook}
           onToggleAutoCook={() => setAutoCook((o) => !o)}
+          autoAdd={autoAdd}
+          onToggleAutoAdd={() => setAutoAdd((o) => !o)}
           autoPull={autoPull}
           setAutoPull={setAutoPull}
           autoPullThreshold={autoPullThreshold}
